@@ -1,0 +1,14 @@
+name: wheatley_generators
+description: 'A simple testing framework that tries to break your properties.'
+version: 0.1.0
+
+repository: https://github.com/tjarvtrand/wheatley
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  characters: ^1.4.1
+
+dev_dependencies:
+  lints: ^6.0.0
