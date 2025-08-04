@@ -1,14 +1,18 @@
 name: wheatley_generators
-description: 'A simple testing framework that tries to break your properties.'
+description: 'Generators commonly used with the wheatley testing framework.'
 version: 0.1.0
 
 repository: https://github.com/tjarvtrand/wheatley
+
+resolution: workspace
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
 
 dependencies:
   characters: ^1.4.1
+  meta: ^1.17.0
 
 dev_dependencies:
   lints: ^6.0.0
+  test: ^1.26.3
