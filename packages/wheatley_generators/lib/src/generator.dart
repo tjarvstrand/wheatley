@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:math';
 
+import 'package:wheatley_generators/src/explore_config.dart';
 import 'package:wheatley_generators/src/shrinkable.dart';
 
 /// A [Generator] makes it possible to use Wheatley to test type [T].
@@ -21,6 +23,27 @@ extension GeneratorExtensions<T> on Generator<T> {
   Generator<T?> get nullable => (random, size) => this(random, size).nullable;
 
   Generator<(T, T2)> zip<T2>(Generator<T2> other) => (random, size) => this(random, size).zip(other(random, size));
+
+  /// Explores the input space for inputs that break the property. This works by gradually increasing the size.
+  ///
+  /// Returns the first value where the property is broken, if any.
+  Future<(int, Shrinkable<T>, Object, StackTrace)?> explore(
+    ExploreConfig config,
+    FutureOr<void> Function(T) body,
+  ) async {
+    final inputs =
+        Iterable<(int, int)>.generate(config.runs, (i) => (i, config.initialSize + i * config.sizeIncrement));
+
+    for (final (index, input) in inputs) {
+      final shrinkable = this(config.random, input);
+      try {
+        await body(shrinkable.value);
+      } catch (error, stackTrace) {
+        return (index + 1, shrinkable, error, stackTrace);
+      }
+    }
+    return null;
+  }
 }
 
 extension Tuple2GeneratorExtension<T1, T2> on (Generator<T1>, Generator<T2>) {

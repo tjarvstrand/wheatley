@@ -24,7 +24,7 @@ void main() {
       test('allows shrinking down to null', () {
         final shrinkable = gen.constant(1).nullable(MockedRandom(), 1);
         expect(shrinkable.values, [1, null]);
-        expect(shrinkable.shrink().map((s) => s.value), [null]);
+        expect(shrinkable.shrunken.map((s) => s.value), [null]);
       });
     });
 
