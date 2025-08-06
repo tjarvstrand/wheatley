@@ -51,38 +51,29 @@ class Shrinkable<T> {
   }
 
   /// Returns a new [Shrinkable] where [mapper] is applied to the value of this [Shrinkable].
-  Shrinkable<T2> map<T2>(T2 Function(T value) mapper) => Shrinkable(
-        mapper(value),
-        () => shrunken.map((shrinkable) => shrinkable.map(mapper)),
-      );
+  Shrinkable<T2> map<T2>(T2 Function(T value) mapper) =>
+      Shrinkable(mapper(value), () => shrunken.map((shrinkable) => shrinkable.map(mapper)));
 
   /// Returns a new [Shrinkable] where [mapper] is applied to the value of this [Shrinkable].
-  Shrinkable<T2> flatMap<T2>(Shrinkable<T2> Function(T value) mapper) => Shrinkable(
-        mapper(value).value,
-        () => shrunken.map((s) => mapper(s.value)),
-      );
+  Shrinkable<T2> flatMap<T2>(Shrinkable<T2> Function(T value) mapper) =>
+      Shrinkable(mapper(value).value, () => shrunken.map((s) => mapper(s.value)));
 
   /// Returns a new [Shrinkable] that can be shrunk to `null` in addition to this [Shrinkable]s shrink candidates.
-  Shrinkable<T?> get nullable => Shrinkable<T?>(
-        value,
-        () => shrunken.cast<Shrinkable<T?>>().followedBy([Shrinkable<T?>(null, () => [])]),
-      );
+  Shrinkable<T?> get nullable =>
+      Shrinkable<T?>(value, () => shrunken.cast<Shrinkable<T?>>().followedBy([Shrinkable<T?>(null, () => [])]));
 
   /// Returns a new [Shrinkable] that combines the result of this [Shrinkable] with [other] in a tuple.
   ///
   /// The shrink candidates of the resulting [Shrinkable] is the Cartesian product of the shrink candidates of this
   /// and [other].
-  Shrinkable<(T, T2)> zip<T2>(Shrinkable<T2> other) => Shrinkable<(T, T2)>(
-        (value, other.value),
-        () {
-          final thisShrink = shrunken;
-          if (thisShrink.isNotEmpty) {
-            return thisShrink.map((shrunk) => shrunk.zip(other));
-          }
-          final otherShrink = other.shrunken;
-          return otherShrink.map((shrunk) => shrunk.map((otherValue) => (value, otherValue)));
-        },
-      );
+  Shrinkable<(T, T2)> zip<T2>(Shrinkable<T2> other) => Shrinkable<(T, T2)>((value, other.value), () {
+    final thisShrink = shrunken;
+    if (thisShrink.isNotEmpty) {
+      return thisShrink.map((shrunk) => shrunk.zip(other));
+    }
+    final otherShrink = other.shrunken;
+    return otherShrink.map((shrunk) => shrunk.map((otherValue) => (value, otherValue)));
+  });
 
   /// Returns an [Iterable] of this [Shrinkable]s value and all values that it can shrink to.
   ///

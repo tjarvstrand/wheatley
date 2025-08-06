@@ -1,0 +1,22 @@
+name: wheatley
+
+on:
+  push:
+    branches:
+     - main
+     - ci-*
+  pull_request:
+
+jobs:
+  test:
+    name: Test Wheatley
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: dart --version
+      - run: dart pub get
+      - run: dart format --set-exit-if-changed  --output=none .
+      - run: dart analyze --fatal-infos
+      - run: dart test
+

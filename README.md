@@ -6,7 +6,7 @@
 [![pub points](https://img.shields.io/pub/points/wheatley?logo=dart)](https://pub.dev/packages/wheatley/score)
 ![building](https://github.com/tjarvstrand/wheatley/workflows/wheatley/badge.svg)
 
-A property based testing framework for Dart, heavily based by [Glados](https://pub.dev/packages/glados).
+A property based testing framework for Dart, heavily based on [Glados](https://pub.dev/packages/glados).
 
 # Property based testing basics
 

@@ -62,9 +62,12 @@ Generator<double> negativeDouble({double shrinkInterval = .01}) =>
     double_(max: 0 - shrinkInterval, shrinkInterval: shrinkInterval);
 Generator<double> nonPositiveDouble({double shrinkInterval = .01}) => double_(max: 0, shrinkInterval: shrinkInterval);
 
-Generator<num> number({num? min, num? max, num? shrinkInterval}) => boolean.flatMap((v) => v
-    ? integer(min: min?.toInt(), max: max?.toInt(), shrinkInterval: shrinkInterval?.toInt())
-    : double_(min: min?.toDouble(), max: max?.toDouble(), shrinkInterval: shrinkInterval?.toDouble()));
+Generator<num> number({num? min, num? max, num? shrinkInterval}) => boolean.flatMap(
+  (v) =>
+      v
+          ? integer(min: min?.toInt(), max: max?.toInt(), shrinkInterval: shrinkInterval?.toInt())
+          : double_(min: min?.toDouble(), max: max?.toDouble(), shrinkInterval: shrinkInterval?.toDouble()),
+);
 
 Generator<BigInt> bigInt({BigInt? min, BigInt? max, BigInt? shrinkInterval}) {
   return generator(

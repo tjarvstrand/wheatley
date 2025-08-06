@@ -4,15 +4,11 @@ final _defaultRandom = Random();
 
 /// Configuration for several parameters used during the exploration phase.
 class ExploreConfig {
-  const ExploreConfig({
-    this.runs = 100,
-    this.initialSize = 10,
-    this.sizeIncrement = 1,
-    Random? random,
-  })  : assert(runs > 0, 'Number of runs must be greater than 0'),
-        assert(initialSize > 0, 'Initial size must be greater than 0'),
-        assert(sizeIncrement >= 0, 'Speed must be greater than or equal to 0'),
-        _random = random;
+  const ExploreConfig({this.runs = 100, this.initialSize = 10, this.sizeIncrement = 1, Random? random})
+    : assert(runs > 0, 'Number of runs must be greater than 0'),
+      assert(initialSize > 0, 'Initial size must be greater than 0'),
+      assert(sizeIncrement >= 0, 'Speed must be greater than or equal to 0'),
+      _random = random;
 
   /// The number of runs after which to stop trying to break the property.
   final int runs;

@@ -31,8 +31,10 @@ extension GeneratorExtensions<T> on Generator<T> {
     ExploreConfig config,
     FutureOr<void> Function(T) body,
   ) async {
-    final inputs =
-        Iterable<(int, int)>.generate(config.runs, (i) => (i, config.initialSize + i * config.sizeIncrement));
+    final inputs = Iterable<(int, int)>.generate(
+      config.runs,
+      (i) => (i, config.initialSize + i * config.sizeIncrement),
+    );
 
     for (final (index, input) in inputs) {
       final shrinkable = this(config.random, input);
@@ -48,118 +50,99 @@ extension GeneratorExtensions<T> on Generator<T> {
 
 extension Tuple2GeneratorExtension<T1, T2> on (Generator<T1>, Generator<T2>) {
   Generator<(T1, T2)> get zip => (random, size) {
-        return $1(random, size).zip($2(random, size));
-      };
+    return $1(random, size).zip($2(random, size));
+  };
 }
 
 extension Tuple3GeneratorExtension<T1, T2, T3> on (Generator<T1>, Generator<T2>, Generator<T3>) {
   Generator<(T1, T2, T3)> get zip => (random, size) {
-        return $1(random, size).zip($2(random, size)).zip($3(random, size)).map((tuple) {
-          final ((first, second), third) = tuple;
-          return (first, second, third);
-        });
-      };
+    return $1(random, size).zip($2(random, size)).zip($3(random, size)).map((tuple) {
+      final ((first, second), third) = tuple;
+      return (first, second, third);
+    });
+  };
 }
 
 extension Tuple4GeneratorExtension<T1, T2, T3, T4> on (Generator<T1>, Generator<T2>, Generator<T3>, Generator<T4>) {
   Generator<(T1, T2, T3, T4)> get zip => (random, size) {
-        return $1(random, size).zip($2(random, size)).zip($3(random, size)).zip($4(random, size)).map((tuple) {
-          final (((first, second), third), fourth) = tuple;
-          return (first, second, third, fourth);
-        });
-      };
+    return $1(random, size).zip($2(random, size)).zip($3(random, size)).zip($4(random, size)).map((tuple) {
+      final (((first, second), third), fourth) = tuple;
+      return (first, second, third, fourth);
+    });
+  };
 }
 
-extension Tuple5GeneratorExtension<T1, T2, T3, T4, T5> on (
-  Generator<T1>,
-  Generator<T2>,
-  Generator<T3>,
-  Generator<T4>,
-  Generator<T5>
-) {
+extension Tuple5GeneratorExtension<T1, T2, T3, T4, T5>
+    on (Generator<T1>, Generator<T2>, Generator<T3>, Generator<T4>, Generator<T5>) {
   Generator<(T1, T2, T3, T4, T5)> get zip => (random, size) {
-        return $1(random, size)
-            .zip($2(random, size))
-            .zip($3(random, size))
-            .zip($4(random, size))
-            .zip($5(random, size))
-            .map((tuple) {
-          final ((((first, second), third), fourth), fifth) = tuple;
-          return (first, second, third, fourth, fifth);
-        });
-      };
+    return $1(random, size).zip($2(random, size)).zip($3(random, size)).zip($4(random, size)).zip($5(random, size)).map(
+      (tuple) {
+        final ((((first, second), third), fourth), fifth) = tuple;
+        return (first, second, third, fourth, fifth);
+      },
+    );
+  };
 }
 
-extension Tuple6GeneratorExtension<T1, T2, T3, T4, T5, T6> on (
-  Generator<T1>,
-  Generator<T2>,
-  Generator<T3>,
-  Generator<T4>,
-  Generator<T5>,
-  Generator<T6>
-) {
+extension Tuple6GeneratorExtension<T1, T2, T3, T4, T5, T6>
+    on (Generator<T1>, Generator<T2>, Generator<T3>, Generator<T4>, Generator<T5>, Generator<T6>) {
   Generator<(T1, T2, T3, T4, T5, T6)> get zip => (random, size) {
-        return $1(random, size)
-            .zip($2(random, size))
-            .zip($3(random, size))
-            .zip($4(random, size))
-            .zip($5(random, size))
-            .zip($6(random, size))
-            .map((tuple) {
+    return $1(random, size)
+        .zip($2(random, size))
+        .zip($3(random, size))
+        .zip($4(random, size))
+        .zip($5(random, size))
+        .zip($6(random, size))
+        .map((tuple) {
           final (((((first, second), third), fourth), fifth), sixth) = tuple;
           return (first, second, third, fourth, fifth, sixth);
         });
-      };
+  };
 }
 
-extension Tuple7GeneratorExtension<T1, T2, T3, T4, T5, T6, T7> on (
-  Generator<T1>,
-  Generator<T2>,
-  Generator<T3>,
-  Generator<T4>,
-  Generator<T5>,
-  Generator<T6>,
-  Generator<T7>,
-) {
+extension Tuple7GeneratorExtension<T1, T2, T3, T4, T5, T6, T7>
+    on (Generator<T1>, Generator<T2>, Generator<T3>, Generator<T4>, Generator<T5>, Generator<T6>, Generator<T7>) {
   Generator<(T1, T2, T3, T4, T5, T6, T7)> get zip => (random, size) {
-        return $1(random, size)
-            .zip($2(random, size))
-            .zip($3(random, size))
-            .zip($4(random, size))
-            .zip($5(random, size))
-            .zip($6(random, size))
-            .zip($7(random, size))
-            .map((tuple) {
+    return $1(random, size)
+        .zip($2(random, size))
+        .zip($3(random, size))
+        .zip($4(random, size))
+        .zip($5(random, size))
+        .zip($6(random, size))
+        .zip($7(random, size))
+        .map((tuple) {
           final ((((((first, second), third), fourth), fifth), sixth), seventh) = tuple;
           return (first, second, third, fourth, fifth, sixth, seventh);
         });
-      };
+  };
 }
 
-extension Tuple8GeneratorExtension<T1, T2, T3, T4, T5, T6, T7, T8> on (
-  Generator<T1>,
-  Generator<T2>,
-  Generator<T3>,
-  Generator<T4>,
-  Generator<T5>,
-  Generator<T6>,
-  Generator<T7>,
-  Generator<T8>,
-) {
+extension Tuple8GeneratorExtension<T1, T2, T3, T4, T5, T6, T7, T8>
+    on
+        (
+          Generator<T1>,
+          Generator<T2>,
+          Generator<T3>,
+          Generator<T4>,
+          Generator<T5>,
+          Generator<T6>,
+          Generator<T7>,
+          Generator<T8>,
+        ) {
   Generator<(T1, T2, T3, T4, T5, T6, T7, T8)> get zip => (random, size) {
-        return $1(random, size)
-            .zip($2(random, size))
-            .zip($3(random, size))
-            .zip($4(random, size))
-            .zip($5(random, size))
-            .zip($6(random, size))
-            .zip($7(random, size))
-            .zip($8(random, size))
-            .map((tuple) {
+    return $1(random, size)
+        .zip($2(random, size))
+        .zip($3(random, size))
+        .zip($4(random, size))
+        .zip($5(random, size))
+        .zip($6(random, size))
+        .zip($7(random, size))
+        .zip($8(random, size))
+        .map((tuple) {
           final (((((((first, second), third), fourth), fifth), sixth), seventh), eighth) = tuple;
           return (first, second, third, fourth, fifth, sixth, seventh, eighth);
         });
-      };
+  };
 }
 
 /// Creates a new, simple [Generator] that produces values and knows how to
