@@ -1,4 +1,4 @@
-part of '../generators.dart';
+import 'package:meta/meta.dart';
 
 /// A wrapper for a value that knows how to shrink itself.
 class Shrinkable<T> {

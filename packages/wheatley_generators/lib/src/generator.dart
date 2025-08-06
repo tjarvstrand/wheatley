@@ -1,4 +1,6 @@
-part of '../generators.dart';
+import 'dart:math';
+
+import 'package:wheatley_generators/src/shrinkable.dart';
 
 /// A [Generator] makes it possible to use Wheatley to test type [T].
 /// Generates a new [Shrinkable] of type [T], using [size] as a rough
@@ -146,22 +148,4 @@ Generator<T> generator<T>({
   Shrinkable<T> generateShrinkable(T value) =>
       Shrinkable(value, () => shrink?.call(value).map(generateShrinkable) ?? []);
   return (random, size) => generateShrinkable(generate(random, size));
-}
-
-/// Always generates the same value.
-Generator<T> constant<T>(T value) => (random, size) => Shrinkable(value, () => []);
-
-/// Chooses between the given values. Values further at the front of the
-/// list are considered less complex.
-Generator<T> oneOf<T>(List<T> values) {
-  final index = {for (final (index, value) in values.indexed) value: index};
-  return generator(
-    generate: (random, size) => values[random.nextInt(size.clamp(0, values.length))],
-    shrink: (option) sync* {
-      final previousIndex = index[option];
-      if (previousIndex != null) {
-        yield values[previousIndex];
-      }
-    },
-  );
 }
