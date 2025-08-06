@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:wheatley_generators/wheatley.dart' as gen;
+import 'package:wheatley/wheatley.dart' as gen;
 
 import 'mocked_random.dart';
 

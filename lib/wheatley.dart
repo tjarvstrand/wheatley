@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:wheatley_generators/src/explore_config.dart';
-import 'package:wheatley_generators/src/generator.dart';
+import 'package:wheatley/src/explore_config.dart';
+import 'package:wheatley/src/generator.dart';
 
-export 'package:wheatley_generators/src/generator.dart';
-export 'package:wheatley_generators/src/generators.dart';
-export 'package:wheatley_generators/src/shrinkable.dart';
+export 'package:wheatley/src/generator.dart';
+export 'package:wheatley/src/generators.dart';
+export 'package:wheatley/src/shrinkable.dart';
 
 void _defaultErrorLogger(String message) => stderr.writeln(message);
 

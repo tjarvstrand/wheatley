@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:test/test.dart';
-import 'package:wheatley_generators/wheatley.dart';
+import 'package:wheatley/wheatley.dart';
 
 Future<void> main() async {
   group('Wheatley', () {

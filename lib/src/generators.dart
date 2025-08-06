@@ -1,7 +1,7 @@
-import 'package:wheatley_generators/src/generator.dart';
-import 'package:wheatley_generators/src/shrinkable.dart';
+import 'package:wheatley/src/generator.dart';
+import 'package:wheatley/src/shrinkable.dart';
 
-export 'package:wheatley_generators/src/generator.dart';
+export 'package:wheatley/src/generator.dart';
 
 /// Always generates the same value.
 Generator<T> constant<T>(T value) => (random, size) => Shrinkable(value, () => []);

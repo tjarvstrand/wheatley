@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:wheatley_generators/src/explore_config.dart';
-import 'package:wheatley_generators/src/shrinkable.dart';
+import 'package:wheatley/src/explore_config.dart';
+import 'package:wheatley/src/shrinkable.dart';
 
 /// A [Generator] makes it possible to use Wheatley to test type [T].
 /// Generates a new [Shrinkable] of type [T], using [size] as a rough
