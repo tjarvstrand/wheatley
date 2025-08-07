@@ -5,6 +5,13 @@ import 'mocked_random.dart';
 
 void main() {
   group('generators', () {
+    group('generate valid values', () {
+      test('integer', () => forAll(integer(min: 0, max: 5))((v) => expect(v, inInclusiveRange(0, 4))));
+      test('positiveInteger', () => forAll(positiveInteger(max: 5))((v) => expect(v, inInclusiveRange(1, 4))));
+      test('nonNegativeInteger', () => forAll(nonNegativeInteger(max: 5))((v) => expect(v, inInclusiveRange(0, 4))));
+      test('negativeInteger', () => forAll(negativeInteger(min: -5))((v) => expect(v, inInclusiveRange(-5, -1))));
+      test('nonPositiveInteger', () => forAll(nonPositiveInteger(min: -5))((v) => expect(v, inInclusiveRange(-5, 0))));
+    });
     group('listOf', () {
       test('Can generate an empty list', () {
         final random = MockedRandom();

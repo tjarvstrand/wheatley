@@ -52,18 +52,26 @@ Generator<double> double_({double? min, double? max, double? shrinkInterval}) {
   );
 }
 
-Generator<int> positiveInteger = integer(min: 1);
-Generator<int> nonNegativeInteger = integer(min: 0);
-Generator<int> negativeInteger = integer(max: -1);
-Generator<int> nonPositiveInteger = integer(max: 1);
+Generator<int> positiveInteger({int? max}) => integer(min: 1, max: max);
+Generator<int> nonNegativeInteger({int? max}) => integer(min: 0, max: max);
+Generator<int> negativeInteger({int? min}) => integer(min: min, max: 0);
+Generator<int> nonPositiveInteger({int? min}) => integer(min: min, max: 1);
 
-Generator<int> uint8 = integer(min: 0, max: 2 << 8);
-Generator<int> uint16 = integer(min: 0, max: 2 << 16);
-Generator<int> uint32 = integer(min: 0, max: 2 << 32);
-Generator<int> int8 = integer(min: -(2 << 7), max: 2 << 7);
-Generator<int> int16 = integer(min: -(2 << 15), max: 2 << 15);
-Generator<int> int32 = integer(min: -(2 << 31), max: 2 << 31);
-Generator<int> int64 = integer(min: -(2 << 63), max: 2 << 63);
+Generator<int> uint8 = integer(min: 0, max: 256);
+Generator<int> uint16 = integer(min: 0, max: 65536);
+Generator<int> uint32 = integer(min: 0, max: 4294967296);
+Generator<int> int8 = integer(min: -128, max: 128);
+Generator<int> int16 = integer(min: -32768, max: 32768);
+Generator<int> int32 = integer(min: -2147483648, max: 2147483648);
+Generator<int> int64 = integer(
+  min: -9223372036854775808,
+  // This is one lower than the actual max value since 9223372036854775808 cannot be represented in Dart without using
+  // a [BigInt].
+  //
+  // Since [Random]'s max is exclusive, this means we will never be able to generate 9223372036854775807, but in
+  // practice this should not be a problem.
+  max: 9223372036854775807,
+);
 
 Generator<double> positiveDouble({double shrinkInterval = .01}) =>
     double_(min: 0 + shrinkInterval, shrinkInterval: shrinkInterval);
