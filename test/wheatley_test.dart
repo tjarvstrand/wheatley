@@ -11,7 +11,7 @@ Future<void> main() async {
       });
       test('Fails with the original error when an [expect] fails inside the body ', () {
         expect(
-          forAll(constant('a'))((v) => expect(v, equals('b'))),
+          forAll(constant('a'), log: (_) {})((v) => expect(v, equals('b'))),
           throwsA(
             isA<TestFailure>().having((a) => a.message?.split('\n').take(2).map((s) => s.trim()), 'message', [
               "Expected: 'b'",
