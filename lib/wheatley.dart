@@ -14,6 +14,7 @@ void _defaultErrorLogger(String message) => stderr.writeln(message);
 Future<void> Function(FutureOr<void> Function(T)) forAll<T>(
   Generator<T> generator, {
   ExploreConfig config = const ExploreConfig(),
+  void Function(String message) log = _defaultErrorLogger,
 }) => (body) async {
   final failure = await generator.explore(config, body);
   if (failure == null) {
@@ -21,8 +22,11 @@ Future<void> Function(FutureOr<void> Function(T)) forAll<T>(
   }
 
   final (sampleCount, input, error, stackTrace) = failure;
-  final (shrinkCount, shrunkInput) = await input.shrink(body);
-  _defaultErrorLogger('Tested $sampleCount inputs, shrunk $shrinkCount times\nFailing for input: $shrunkInput\n');
+  final (shrinkCount, shrunkInput) = await input.shrinkUntilDone(body);
+  log('Tested $sampleCount inputs, shrunk $shrinkCount times');
+  log('Failing for input: ${input.value}\n');
+  log('Smallest failing input: $shrunkInput\n');
+  log('');
   Error.throwWithStackTrace(error, stackTrace);
 };
 

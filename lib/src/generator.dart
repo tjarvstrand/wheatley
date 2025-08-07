@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:wheatley/src/explore_config.dart';
 import 'package:wheatley/src/shrinkable.dart';
@@ -8,7 +8,7 @@ import 'package:wheatley/src/shrinkable.dart';
 /// Generates a new [Shrinkable] of type [T], using [size] as a rough
 /// complexity estimate. The [random] instance should be used as a source for
 /// all pseudo-randomness.
-typedef Generator<T> = Shrinkable<T> Function(Random random, int size);
+typedef Generator<T> = Shrinkable<T> Function(math.Random random, int size);
 
 /// Useful methods on [Generator]s.
 extension GeneratorExtensions<T> on Generator<T> {
@@ -31,13 +31,10 @@ extension GeneratorExtensions<T> on Generator<T> {
     ExploreConfig config,
     FutureOr<void> Function(T) body,
   ) async {
-    final inputs = Iterable<(int, int)>.generate(
-      config.runs,
-      (i) => (i, config.initialSize + i * config.sizeIncrement),
-    );
+    final sizes = Iterable<(int, int)>.generate(config.runs, (i) => (i, config.initialSize + i * config.sizeIncrement));
 
-    for (final (index, input) in inputs) {
-      final shrinkable = this(config.random, input);
+    for (final (index, size) in sizes) {
+      final shrinkable = this(config.random, size);
       try {
         await body(shrinkable.value);
       } catch (error, stackTrace) {
@@ -148,10 +145,9 @@ extension Tuple8GeneratorExtension<T1, T2, T3, T4, T5, T6, T7, T8>
 /// Creates a new, simple [Generator] that produces values and knows how to
 /// simplify them.
 Generator<T> generator<T>({
-  required T Function(Random random, int size) generate,
+  required T Function(math.Random random, int size) generate,
   Iterable<T> Function(T input)? shrink,
 }) {
-  Shrinkable<T> generateShrinkable(T value) =>
-      Shrinkable(value, () => shrink?.call(value).map(generateShrinkable) ?? []);
+  Shrinkable<T> generateShrinkable(T value) => Shrinkable(value, (v) => shrink?.call(v).map(generateShrinkable) ?? []);
   return (random, size) => generateShrinkable(generate(random, size));
 }

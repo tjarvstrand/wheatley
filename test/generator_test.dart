@@ -8,23 +8,23 @@ void main() {
     group('map', () {
       test('should apply the mapper to the value', () {
         final random = MockedRandom();
-        expect(gen.constant(1).map((value) => value * 2)(random, 1).values, [2]);
+        expect(gen.constant(1).map((value) => value * 2)(random, 1).allValues, [2]);
       });
     });
     group('flatMap', () {
       test('should apply the mapper to the value', () {
         final mappedGenerator = gen.boolean.flatMap((value) => value ? gen.constant(1) : gen.constant(-1));
 
-        expect(mappedGenerator(MockedRandom(booleans: [true]), 1).values, [1]);
-        expect(mappedGenerator(MockedRandom(booleans: [false]), 1).values, [-1]);
+        expect(mappedGenerator(MockedRandom(booleans: [true]), 1).allValues, [1]);
+        expect(mappedGenerator(MockedRandom(booleans: [false]), 1).allValues, [-1]);
       });
     });
 
     group('nullable', () {
       test('allows shrinking down to null', () {
         final shrinkable = gen.constant(1).nullable(MockedRandom(), 1);
-        expect(shrinkable.values, [1, null]);
-        expect(shrinkable.shrunken.map((s) => s.value), [null]);
+        expect(shrinkable.allValues, [1, null]);
+        expect(shrinkable.shrunk.map((s) => s.value), [null]);
       });
     });
 
@@ -33,7 +33,7 @@ void main() {
         final random = MockedRandom(integers: [1, 2, 3, 4, 5]);
         final generator = gen.integer(min: 0, max: 5);
 
-        expect(generator.zip(generator)(random, 1).values, [(1, 2), (0, 2), (0, 1), (0, 0)]);
+        expect(generator.zip(generator)(random, 1).allValues, [(1, 2), (0, 2), (0, 1), (0, 0)]);
       });
     });
   });

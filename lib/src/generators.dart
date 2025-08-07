@@ -1,16 +1,22 @@
+import 'dart:math';
+
 import 'package:wheatley/src/generator.dart';
 import 'package:wheatley/src/shrinkable.dart';
 
 export 'package:wheatley/src/generator.dart';
 
 /// Always generates the same value.
-Generator<T> constant<T>(T value) => (random, size) => Shrinkable(value, () => []);
+Generator<T> constant<T>(T value) => (random, size) => Shrinkable(value, (_) => []);
 
 /// A constant generator that always returns `null`.
 final empty = constant<Null>(null);
 
 final boolean = generator(generate: (random, _) => random.nextBool());
 
+/// Generates a non-negative random integer uniformly distributed in the range
+/// from [min], inclusive, to [max], exclusive.
+///
+/// See also [Random.nextInt]
 Generator<int> integer({int? min, int? max, int? shrinkInterval}) {
   assert(min == null || max == null || min < max, 'min must be less than max');
   return generator(
@@ -27,6 +33,10 @@ Generator<int> integer({int? min, int? max, int? shrinkInterval}) {
   );
 }
 
+/// Generates a random floating point value uniformly distributed in the range from [min], inclusive, to [max],
+/// exclusive.
+///
+/// See also [Random.nextDouble]
 Generator<double> double_({double? min, double? max, double? shrinkInterval}) {
   assert(min == null || max == null || min < max, 'min must be less than max');
   return generator(
@@ -95,8 +105,7 @@ Generator<BigInt> bigInt({BigInt? min, BigInt? max, BigInt? shrinkInterval}) {
   );
 }
 
-/// Chooses between the given values. Values further at the front of the
-/// list are considered less complex.
+/// Chooses between the given values. Values further at the front of the list are considered less complex.
 Generator<T> oneOf<T>(Iterable<T> values) {
   final strictValues = <T>[];
   final index = <T, int>{};
@@ -116,3 +125,32 @@ Generator<T> oneOf<T>(Iterable<T> values) {
     },
   );
 }
+
+Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize}) => (random, size) {
+  assert(minSize >= 0, 'minSize must be non-negative');
+  assert(maxSize == null || maxSize >= minSize, 'maxSize must be greater than or equal to minSize');
+  final actualMax = maxSize ?? size;
+
+  if (actualMax == 0 || actualMax < minSize) {
+    return Shrinkable([]);
+  }
+
+  final length = minSize + random.nextInt(actualMax - minSize + 1);
+  final shrinkables = List.generate(length, (_) => item(random, size));
+  final values = shrinkables.map((i) => i.value).toList();
+
+  return Shrinkable(values, (v) sync* {
+    if (shrinkables.isEmpty) {
+      return;
+    }
+    yield Shrinkable(values.take(minSize).toList());
+
+    for (var i = values.length; i > 1; i--) {
+      yield Shrinkable(values.sublist(1, i));
+    }
+
+    for (var i = shrinkables.length - 1; i >= 0; i--) {
+      yield* shrinkables[i].map((v) => values..[i] = v).shrunk;
+    }
+  });
+};
