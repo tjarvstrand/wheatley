@@ -23,7 +23,12 @@ Generator<int> integer({int? min, int? max, int? shrinkInterval}) {
     generate: (random, size) {
       final actualMin = min ?? -size;
       final actualMax = max ?? size;
-      final r = random.nextInt(actualMax - actualMin);
+      const generatorMax = 4294967296; // 1 << 32
+      final rangeWidth = actualMax - actualMin;
+      final r =
+          rangeWidth > generatorMax
+              ? actualMin + (random.nextInt(rangeWidth >> 32) << 32) + random.nextInt(generatorMax)
+              : random.nextInt(rangeWidth);
       return actualMin + r;
     },
     shrink: (input) sync* {

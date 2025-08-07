@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:test/test.dart';
 import 'package:wheatley/wheatley.dart';
 
@@ -7,6 +9,13 @@ void main() {
   group('generators', () {
     group('generate valid values', () {
       test('integer', () => forAll(integer(min: 0, max: 5))((v) => expect(v, inInclusiveRange(0, 4))));
+      test(
+        'integer can generate numbers larger than 4294967296',
+        () => expect(
+          integer(min: 4294967297, max: 9223372036854775807)(Random(), 1).value,
+          inInclusiveRange(4294967297, 9223372036854775807),
+        ),
+      );
       test('positiveInteger', () => forAll(positiveInteger(max: 5))((v) => expect(v, inInclusiveRange(1, 4))));
       test('nonNegativeInteger', () => forAll(nonNegativeInteger(max: 5))((v) => expect(v, inInclusiveRange(0, 4))));
       test('negativeInteger', () => forAll(negativeInteger(min: -5))((v) => expect(v, inInclusiveRange(-5, -1))));
