@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:characters/characters.dart';
+import 'package:wheatley/src/_no_value_provided.dart';
 import 'package:wheatley/src/generator.dart';
 import 'package:wheatley/src/shrinkable.dart';
 
@@ -140,189 +141,94 @@ Generator<T> oneOf<T>(Iterable<T> values) {
   );
 }
 
-Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize}) => (random, size) {
+Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize}) {
   assert(minSize >= 0, 'minSize must be non-negative');
   assert(maxSize == null || maxSize >= minSize, 'maxSize must be greater than or equal to minSize');
-  final actualMax = maxSize ?? size;
+  return (random, size) {
+    final actualMax = min(maxSize ?? size, size);
 
-  if (actualMax == 0 || actualMax < minSize) {
-    return Shrinkable([]);
-  }
-
-  final length = minSize + _nextInt(random, actualMax - minSize + 1);
-  final shrinkables = List.generate(length, (_) => item(random, size));
-  final values = shrinkables.map((i) => i.value).toList();
-
-  return Shrinkable(values, (v) sync* {
-    if (shrinkables.isEmpty) {
-      return;
-    }
-    yield Shrinkable(values.take(minSize).toList());
-
-    for (var i = values.length; i > 1; i--) {
-      yield Shrinkable(values.sublist(1, i));
+    if (actualMax == 0 || actualMax < minSize) {
+      return Shrinkable([]);
     }
 
-    for (var i = shrinkables.length - 1; i >= 0; i--) {
-      yield* shrinkables[i].map((v) => values..[i] = v).shrunk;
+    final length = minSize + _nextInt(random, actualMax - minSize + 1);
+    final shrinkables = List.generate(length, (_) => item(random, size));
+    final values = shrinkables.map((i) => i.value).toList();
+
+    return Shrinkable(values, (v) sync* {
+      if (shrinkables.isEmpty) {
+        return;
+      }
+      yield Shrinkable(values.take(minSize).toList());
+
+      for (var i = values.length; i > 1; i--) {
+        yield Shrinkable(values.sublist(1, i));
+      }
+
+      for (var i = shrinkables.length - 1; i >= 0; i--) {
+        yield* shrinkables[i].map((v) => values..[i] = v).shrunk;
+      }
+    });
+  };
+}
+
+Generator<Set<T>> setOf<T>(Set<T> items, {int minSize = 0, int? maxSize}) {
+  assert(minSize >= 0, 'minSize must not be negative');
+  assert(maxSize == null || maxSize >= 0, 'maxSize must not be negative');
+
+  assert(
+    maxSize == null || maxSize <= items.length,
+    'maxSize must be less than or equal to the number of distinct elements in items',
+  );
+
+  return (random, size) {
+    final actualMax = min(maxSize ?? size, size);
+    if (actualMax == 0 || actualMax < minSize) {
+      return Shrinkable({});
     }
-  });
-};
+
+    final indices = List.generate(items.length, (i) => i)..shuffle(random);
+    final length = minSize + _nextInt(random, actualMax - minSize);
+    final shrinkables = indices.take(length).map((i) => Shrinkable(items.elementAt(i), (_) => [])).toList();
+    final values = shrinkables.map((i) => i.value).toList();
+
+    return Shrinkable(values.toSet(), (v) sync* {
+      if (shrinkables.isEmpty) {
+        return;
+      }
+      yield Shrinkable(values.take(minSize).toSet());
+
+      for (var i = values.length; i > 1; i--) {
+        yield Shrinkable(values.sublist(1, i).toSet());
+      }
+
+      for (var i = shrinkables.length - 1; i >= 0; i--) {
+        yield* shrinkables[i].map((v) => Set.of(values..[i] = v)).shrunk;
+      }
+    });
+  };
+}
 
 Generator<Map<K, V>> mapOf<K, V>(Generator<K> key, Generator<V> value, {int minSize = 0, int? maxSize}) =>
     listOf(key.zip(value).map((kv) => MapEntry(kv.$1, kv.$2)), minSize: minSize, maxSize: maxSize).map(Map.fromEntries);
-
-class _NoDateTimeProvided implements DateTime {
-  const _NoDateTimeProvided();
-
-  @override
-  DateTime add(Duration duration) => throw UnimplementedError();
-
-  @override
-  int compareTo(DateTime other) => throw UnimplementedError();
-
-  @override
-  int get day => throw UnimplementedError();
-
-  @override
-  Duration difference(DateTime other) => throw UnimplementedError();
-
-  @override
-  int get hour => throw UnimplementedError();
-
-  @override
-  bool isAfter(DateTime other) => throw UnimplementedError();
-
-  @override
-  bool isAtSameMomentAs(DateTime other) => throw UnimplementedError();
-
-  @override
-  bool isBefore(DateTime other) => throw UnimplementedError();
-
-  @override
-  bool get isUtc => throw UnimplementedError();
-
-  @override
-  int get microsecond => throw UnimplementedError();
-
-  @override
-  int get microsecondsSinceEpoch => throw UnimplementedError();
-
-  @override
-  int get millisecond => throw UnimplementedError();
-
-  @override
-  int get millisecondsSinceEpoch => throw UnimplementedError();
-
-  @override
-  int get minute => throw UnimplementedError();
-
-  @override
-  int get month => throw UnimplementedError();
-
-  @override
-  int get second => throw UnimplementedError();
-
-  @override
-  DateTime subtract(Duration duration) => throw UnimplementedError();
-
-  @override
-  String get timeZoneName => throw UnimplementedError();
-
-  @override
-  Duration get timeZoneOffset => throw UnimplementedError();
-
-  @override
-  String toIso8601String() => throw UnimplementedError();
-
-  @override
-  DateTime toLocal() => throw UnimplementedError();
-
-  @override
-  DateTime toUtc() => throw UnimplementedError();
-
-  @override
-  int get weekday => throw UnimplementedError();
-
-  @override
-  int get year => throw UnimplementedError();
-}
 
 /// A generator that returns [DateTime]s.
 ///
 /// By default, it does not generate values before the UNIX epoch (1970-01-01T00:00:00Z).
 ///
 /// [min] is inclusive, and [max] is exclusive on the scale of one microsecond.
-Generator<DateTime> dateTime({DateTime? min = const _NoDateTimeProvided(), DateTime? max}) => integer(
-  min: min is _NoDateTimeProvided ? 0 : min?.millisecondsSinceEpoch,
+Generator<DateTime> dateTime({DateTime? min = const NoDateTimeProvided(), DateTime? max}) => integer(
+  min: min is NoDateTimeProvided ? 0 : min?.millisecondsSinceEpoch,
   max: max?.microsecondsSinceEpoch,
 ).map(DateTime.fromMicrosecondsSinceEpoch);
-
-class _NoDurationProvided implements Duration {
-  const _NoDurationProvided();
-
-  @override
-  Duration operator *(num factor) => throw UnimplementedError();
-
-  @override
-  Duration operator +(Duration other) => throw UnimplementedError();
-
-  @override
-  Duration operator -(Duration other) => throw UnimplementedError();
-
-  @override
-  bool operator <(Duration other) => throw UnimplementedError();
-
-  @override
-  bool operator <=(Duration other) => throw UnimplementedError();
-
-  @override
-  bool operator >(Duration other) => throw UnimplementedError();
-
-  @override
-  bool operator >=(Duration other) => throw UnimplementedError();
-
-  @override
-  Duration abs() => throw UnimplementedError();
-
-  @override
-  int compareTo(Duration other) => throw UnimplementedError();
-
-  @override
-  int get inDays => throw UnimplementedError();
-
-  @override
-  int get inHours => throw UnimplementedError();
-
-  @override
-  int get inMicroseconds => throw UnimplementedError();
-
-  @override
-  int get inMilliseconds => throw UnimplementedError();
-
-  @override
-  int get inMinutes => throw UnimplementedError();
-
-  @override
-  int get inSeconds => throw UnimplementedError();
-
-  @override
-  bool get isNegative => throw UnimplementedError();
-
-  @override
-  Duration operator -() => throw UnimplementedError();
-
-  @override
-  Duration operator ~/(int quotient) => throw UnimplementedError();
-}
 
 /// A generator that returns [Duration]s.
 ///
 /// By default, it does not generate negative values
 ///
 /// [min] is inclusive, and [max] is exclusive on the scale of one microsecond.
-Generator<Duration> duration({Duration? min = const _NoDurationProvided(), Duration? max}) => integer(
-  min: min is _NoDurationProvided ? 0 : min?.inMicroseconds,
+Generator<Duration> duration({Duration? min = const NoDurationProvided(), Duration? max}) => integer(
+  min: min is NoDurationProvided ? 0 : min?.inMicroseconds,
   max: max?.inMicroseconds,
 ).map((int) => Duration(microseconds: int));
 

@@ -71,5 +71,36 @@ void main() {
         () => forAll(listOf(always(1), maxSize: 10))((list) => expect(list.length, lessThanOrEqualTo(10))),
       );
     });
+    group('setOf', () {
+      test('Can generate an empty set', () {
+        final random = MockedRandom();
+        expect(setOf({1}, maxSize: 0)(random, 1).allValues, [[]]);
+      });
+      test('Can generate a non empty set', () {
+        final random = MockedRandom(integers: [1]);
+        expect(setOf({1}, maxSize: 1)(random, 1).allValues, [
+          [1],
+          [],
+        ]);
+      });
+      test('Shrinks by removing elements and then by shrinking individual elements', () {
+        final random = MockedRandom(integers: [2, 2, 3]);
+        final allValues = setOf({0, 1, 2}, maxSize: 3)(random, 1).allValues.toList();
+        expect(allValues.length, 4);
+        expect(allValues[0], {0, 1, 2}); // current value
+        expect(allValues[1], []); // Minimal case
+        // Shrinking by removing elements
+        expect(allValues[2].length, 2);
+        expect(allValues[3].length, 1);
+      });
+      test(
+        'Does not generate a set smaller than minSize',
+        () => forAll(setOf({1, 2, 3, 4, 5, 6}, minSize: 5))((set) => expect(set.length, greaterThanOrEqualTo(5))),
+      );
+      test(
+        'Does not generate a set larger than maxSize',
+        () => forAll(setOf({1, 2, 3, 4, 5, 6}, maxSize: 5))((set) => expect(set.length, lessThanOrEqualTo(5))),
+      );
+    });
   });
 }
