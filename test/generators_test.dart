@@ -20,6 +20,17 @@ void main() {
       test('nonNegativeInteger', () => forAll(nonNegativeInteger(max: 5))((v) => expect(v, inInclusiveRange(0, 4))));
       test('negativeInteger', () => forAll(negativeInteger(min: -5))((v) => expect(v, inInclusiveRange(-5, -1))));
       test('nonPositiveInteger', () => forAll(nonPositiveInteger(min: -5))((v) => expect(v, inInclusiveRange(-5, 0))));
+      test('string', () => forAll(string(chars: 'abc'))((v) => matches(RegExp('[abc]*'))));
+      test('dateTime', () {
+        final now = DateTime.now();
+        forAll(dateTime(max: now))(
+          (v) => expect(v.microsecondsSinceEpoch, inInclusiveRange(0, now.microsecondsSinceEpoch)),
+        );
+      });
+      test('duration', () {
+        final untilNow = Duration(milliseconds: DateTime.now().millisecondsSinceEpoch);
+        forAll(duration(max: untilNow))((v) => expect(v.inMicroseconds, inInclusiveRange(0, untilNow.inMicroseconds)));
+      });
     });
     group('listOf', () {
       test('Can generate an empty list', () {

@@ -1,9 +1,16 @@
 import 'dart:math';
 
+import 'package:characters/characters.dart';
 import 'package:wheatley/src/generator.dart';
 import 'package:wheatley/src/shrinkable.dart';
 
 export 'package:wheatley/src/generator.dart';
+
+const generatorMax = 4294967296; // 1 << 32
+int _nextInt(Random random, int maxValue) =>
+    maxValue > generatorMax
+        ? (random.nextInt(maxValue >> 32) << 32) + random.nextInt(generatorMax)
+        : random.nextInt(maxValue);
 
 /// Always generates the same value.
 Generator<T> always<T>(T value) => (random, size) => Shrinkable(value, (_) => []);
@@ -23,13 +30,7 @@ Generator<int> integer({int? min, int? max, int? shrinkInterval}) {
     generate: (random, size) {
       final actualMin = min ?? -size;
       final actualMax = max ?? size;
-      const generatorMax = 4294967296; // 1 << 32
-      final rangeWidth = actualMax - actualMin;
-      final r =
-          rangeWidth > generatorMax
-              ? actualMin + (random.nextInt(rangeWidth >> 32) << 32) + random.nextInt(generatorMax)
-              : random.nextInt(rangeWidth);
-      return actualMin + r;
+      return actualMin + _nextInt(random, actualMax - actualMin);
     },
     shrink: (input) sync* {
       if (input > 0 && input > (min ?? 0)) yield input - (shrinkInterval ?? 1);
@@ -123,13 +124,13 @@ Generator<T> oneOf<T>(Iterable<T> values) {
   final strictValues = <T>[];
   final index = <T, int>{};
 
-  for (final (i, value) in strictValues.indexed) {
+  for (final (i, value) in values.indexed) {
     strictValues.add(value);
     index[value] ??= i;
   }
 
   return generator(
-    generate: (random, size) => strictValues[random.nextInt(size.clamp(0, strictValues.length))],
+    generate: (random, size) => strictValues[_nextInt(random, size.clamp(0, strictValues.length))],
     shrink: (option) sync* {
       final previousIndex = index[option];
       if (previousIndex != null) {
@@ -148,7 +149,7 @@ Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize})
     return Shrinkable([]);
   }
 
-  final length = minSize + random.nextInt(actualMax - minSize + 1);
+  final length = minSize + _nextInt(random, actualMax - minSize + 1);
   final shrinkables = List.generate(length, (_) => item(random, size));
   final values = shrinkables.map((i) => i.value).toList();
 
@@ -167,3 +168,180 @@ Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize})
     }
   });
 };
+
+Generator<Map<K, V>> mapOf<K, V>(Generator<K> key, Generator<V> value, {int minSize = 0, int? maxSize}) =>
+    listOf(key.zip(value).map((kv) => MapEntry(kv.$1, kv.$2)), minSize: minSize, maxSize: maxSize).map(Map.fromEntries);
+
+class _NoDateTimeProvided implements DateTime {
+  const _NoDateTimeProvided();
+
+  @override
+  DateTime add(Duration duration) => throw UnimplementedError();
+
+  @override
+  int compareTo(DateTime other) => throw UnimplementedError();
+
+  @override
+  int get day => throw UnimplementedError();
+
+  @override
+  Duration difference(DateTime other) => throw UnimplementedError();
+
+  @override
+  int get hour => throw UnimplementedError();
+
+  @override
+  bool isAfter(DateTime other) => throw UnimplementedError();
+
+  @override
+  bool isAtSameMomentAs(DateTime other) => throw UnimplementedError();
+
+  @override
+  bool isBefore(DateTime other) => throw UnimplementedError();
+
+  @override
+  bool get isUtc => throw UnimplementedError();
+
+  @override
+  int get microsecond => throw UnimplementedError();
+
+  @override
+  int get microsecondsSinceEpoch => throw UnimplementedError();
+
+  @override
+  int get millisecond => throw UnimplementedError();
+
+  @override
+  int get millisecondsSinceEpoch => throw UnimplementedError();
+
+  @override
+  int get minute => throw UnimplementedError();
+
+  @override
+  int get month => throw UnimplementedError();
+
+  @override
+  int get second => throw UnimplementedError();
+
+  @override
+  DateTime subtract(Duration duration) => throw UnimplementedError();
+
+  @override
+  String get timeZoneName => throw UnimplementedError();
+
+  @override
+  Duration get timeZoneOffset => throw UnimplementedError();
+
+  @override
+  String toIso8601String() => throw UnimplementedError();
+
+  @override
+  DateTime toLocal() => throw UnimplementedError();
+
+  @override
+  DateTime toUtc() => throw UnimplementedError();
+
+  @override
+  int get weekday => throw UnimplementedError();
+
+  @override
+  int get year => throw UnimplementedError();
+}
+
+/// A generator that returns [DateTime]s.
+///
+/// By default, it does not generate values before the UNIX epoch (1970-01-01T00:00:00Z).
+///
+/// [min] is inclusive, and [max] is exclusive on the scale of one microsecond.
+Generator<DateTime> dateTime({DateTime? min = const _NoDateTimeProvided(), DateTime? max}) => integer(
+  min: min is _NoDateTimeProvided ? 0 : min?.millisecondsSinceEpoch,
+  max: max?.microsecondsSinceEpoch,
+).map(DateTime.fromMicrosecondsSinceEpoch);
+
+class _NoDurationProvided implements Duration {
+  const _NoDurationProvided();
+
+  @override
+  Duration operator *(num factor) => throw UnimplementedError();
+
+  @override
+  Duration operator +(Duration other) => throw UnimplementedError();
+
+  @override
+  Duration operator -(Duration other) => throw UnimplementedError();
+
+  @override
+  bool operator <(Duration other) => throw UnimplementedError();
+
+  @override
+  bool operator <=(Duration other) => throw UnimplementedError();
+
+  @override
+  bool operator >(Duration other) => throw UnimplementedError();
+
+  @override
+  bool operator >=(Duration other) => throw UnimplementedError();
+
+  @override
+  Duration abs() => throw UnimplementedError();
+
+  @override
+  int compareTo(Duration other) => throw UnimplementedError();
+
+  @override
+  int get inDays => throw UnimplementedError();
+
+  @override
+  int get inHours => throw UnimplementedError();
+
+  @override
+  int get inMicroseconds => throw UnimplementedError();
+
+  @override
+  int get inMilliseconds => throw UnimplementedError();
+
+  @override
+  int get inMinutes => throw UnimplementedError();
+
+  @override
+  int get inSeconds => throw UnimplementedError();
+
+  @override
+  bool get isNegative => throw UnimplementedError();
+
+  @override
+  Duration operator -() => throw UnimplementedError();
+
+  @override
+  Duration operator ~/(int quotient) => throw UnimplementedError();
+}
+
+/// A generator that returns [Duration]s.
+///
+/// By default, it does not generate negative values
+///
+/// [min] is inclusive, and [max] is exclusive on the scale of one microsecond.
+Generator<Duration> duration({Duration? min = const _NoDurationProvided(), Duration? max}) => integer(
+  min: min is _NoDurationProvided ? 0 : min?.inMicroseconds,
+  max: max?.inMicroseconds,
+).map((int) => Duration(microseconds: int));
+
+const asciiLetters = 'abcdefghijklmnopqrstuvwxyz';
+const digits = '0123456789';
+const asciiAlphaNumeric = '$asciiLetters$digits';
+
+/// A generator that returns [String]s.
+///
+/// By default it generates ASCII alphanumeric strings.
+///
+/// [minSize] is inclusive, and [maxSize] is exclusive.
+Generator<String> string({String chars = asciiAlphaNumeric, int minSize = 0, int? maxSize}) => listOf(
+  oneOf(chars.characters.toList()),
+  minSize: minSize,
+  maxSize: maxSize,
+).map((listOfChars) => listOfChars.join());
+
+extension StringGeneratorExtension on Generator<String> {
+  Generator<String> get lowerCase => map((s) => s.toLowerCase());
+  Generator<String> get upperCase => map((s) => s.toUpperCase());
+}
