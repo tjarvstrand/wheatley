@@ -15,11 +15,11 @@ void main() {
     group('listOf', () {
       test('Can generate an empty list', () {
         final random = MockedRandom();
-        expect(listOf(constant(1), maxSize: 0)(random, 1).allValues, [[]]);
+        expect(listOf(always(1), maxSize: 0)(random, 1).allValues, [[]]);
       });
       test('Can generate a non empty list', () {
         final random = MockedRandom(integers: [1]);
-        expect(listOf(constant(1), maxSize: 1)(random, 1).allValues, [
+        expect(listOf(always(1), maxSize: 1)(random, 1).allValues, [
           [1],
           [],
         ]);
@@ -48,7 +48,7 @@ void main() {
       );
       test(
         'Does not generate a list larger than maxSize',
-        () => forAll(listOf(constant(1), maxSize: 10))((list) => expect(list.length, lessThanOrEqualTo(10))),
+        () => forAll(listOf(always(1), maxSize: 10))((list) => expect(list.length, lessThanOrEqualTo(10))),
       );
     });
   });

@@ -6,10 +6,10 @@ import 'package:wheatley/src/shrinkable.dart';
 export 'package:wheatley/src/generator.dart';
 
 /// Always generates the same value.
-Generator<T> constant<T>(T value) => (random, size) => Shrinkable(value, (_) => []);
+Generator<T> always<T>(T value) => (random, size) => Shrinkable(value, (_) => []);
 
 /// A constant generator that always returns `null`.
-final empty = constant<Null>(null);
+final empty = always<Null>(null);
 
 final boolean = generator(generate: (random, _) => random.nextBool());
 
