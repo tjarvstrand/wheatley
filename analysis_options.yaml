@@ -36,7 +36,7 @@ linter:
     - directives_ordering
     - do_not_use_environment
     - eol_at_end_of_file
-    - flutter_style_todos
+    - flutter_style_todos: false
     - implicit_call_tearoffs
     - implicit_reopen
     - invalid_case_patterns

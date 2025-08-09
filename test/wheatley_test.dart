@@ -19,11 +19,11 @@ Future<void> main() async {
       });
       test('Fails with the original error when an [expect] fails inside the body ', () {
         expect(
-          forAll(always('a'), log: (_) {})((v) => expect(v, equals('b'))),
+          forAll(string(chars: 'a', minSize: 3, maxSize: 3), log: (_) {})((v) => expect(v, equals('b'))),
           throwsA(
             isA<TestFailure>().having((a) => a.message?.split('\n').take(2).map((s) => s.trim()), 'message', [
               "Expected: 'b'",
-              "Actual: 'a'",
+              "Actual: 'aaa'",
             ]),
           ),
         );

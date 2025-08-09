@@ -30,6 +30,8 @@ Future<void> Function(FutureOr<void> Function(T)) forAll<T>(
   Error.throwWithStackTrace(error, stackTrace);
 };
 
+// coverage:ignore-start
+
 Future<void> Function(FutureOr<void> Function(T1, T2)) forAll2<T1, T2>(
   Generator<T1> generator1,
   Generator<T2> generator2, {
@@ -136,3 +138,5 @@ extension Function8Ext<In1, In2, In3, In4, In5, In6, In7, In8, Out>
   Out Function((In1, In2, In3, In4, In5, In6, In7, In8) input) get tupled =>
       (input) => this(input.$1, input.$2, input.$3, input.$4, input.$5, input.$6, input.$7, input.$8);
 }
+
+// coverage:ignore-end

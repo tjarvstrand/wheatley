@@ -83,4 +83,7 @@ class Shrinkable<T> {
       yield* shrinkable.allValues;
     }
   }
+
+  @override
+  String toString() => 'Shrinkable<$T>($value)';
 }

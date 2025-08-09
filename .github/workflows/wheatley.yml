@@ -22,14 +22,14 @@ jobs:
       - name: Analyze
         run: dart analyze --fatal-infos
       - name: Test
-        run: dart pub run coverage:test_with_coverage
+        run: dart run coverage:test_with_coverage
       - name: Setup LCOV
         uses: hrishikesh-kadam/setup-lcov@v1
       - name: Report code coverage
         uses: zgosalvez/github-actions-report-lcov@v4
         with:
           coverage-files: coverage/lcov.info
-          minimum-coverage: 34
+          minimum-coverage: 80
           artifact-name: code-coverage-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
           update-comment: true

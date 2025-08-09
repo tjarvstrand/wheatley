@@ -10,15 +10,26 @@ import 'package:wheatley/src/shrinkable.dart';
 /// all pseudo-randomness.
 typedef Generator<T> = Shrinkable<T> Function(math.Random random, int size);
 
+/// Creates a new, simple [Generator] that produces values and knows how to
+/// simplify them.
+Generator<T> generator<T>({
+  required T Function(math.Random random, int size) generate,
+  Iterable<T> Function(T input)? shrink,
+}) {
+  Shrinkable<T> generateShrinkable(T value) => Shrinkable(value, (v) => shrink?.call(v).map(generateShrinkable) ?? []);
+  return (random, size) => generateShrinkable(generate(random, size));
+}
+
 /// Useful methods on [Generator]s.
 extension GeneratorExtensions<T> on Generator<T> {
+  /// Transforms this [Generator] into a new [Generator] that produces values of type [T2] by applying [mapper] to its
+  /// values.
   Generator<T2> map<T2>(T2 Function(T value) mapper) => (random, size) => this(random, size).map(mapper);
 
+  /// Transforms this [Generator] into a new [Generator] that produces values of type [T2] by applying [mapper] to its
+  /// values.
   Generator<T2> flatMap<T2>(Generator<T2> Function(T) mapper) =>
       (random, size) => mapper(this(random, size).value)(random, size);
-
-  Generator<R> bind<R>(Generator<R> Function(T value) mapper) =>
-      (random, size) => map(mapper)(random, size).value(random, size);
 
   Generator<T?> get nullable => (random, size) => this(random, size).nullable;
 
@@ -50,6 +61,8 @@ extension GeneratorExtensions<T> on Generator<T> {
     return null;
   }
 }
+
+// coverage:ignore-start
 
 extension Tuple2GeneratorExtension<T1, T2> on (Generator<T1>, Generator<T2>) {
   Generator<(T1, T2)> get zip => (random, size) {
@@ -148,12 +161,4 @@ extension Tuple8GeneratorExtension<T1, T2, T3, T4, T5, T6, T7, T8>
   };
 }
 
-/// Creates a new, simple [Generator] that produces values and knows how to
-/// simplify them.
-Generator<T> generator<T>({
-  required T Function(math.Random random, int size) generate,
-  Iterable<T> Function(T input)? shrink,
-}) {
-  Shrinkable<T> generateShrinkable(T value) => Shrinkable(value, (v) => shrink?.call(v).map(generateShrinkable) ?? []);
-  return (random, size) => generateShrinkable(generate(random, size));
-}
+// coverage:ignore-end

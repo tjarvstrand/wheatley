@@ -19,5 +19,9 @@ class MockedRandom implements Random {
   double nextDouble() => doubles.elementAt(nextDoubleIndex++ % doubles.length);
 
   @override
-  int nextInt(int max) => integers.elementAt(nextIntegerIndex++ % integers.length);
+  int nextInt(int max) {
+    final element = integers.elementAt(nextIntegerIndex++ % integers.length);
+    assert(element < max, 'Mocked integer $element is not less than max $max');
+    return element;
+  }
 }

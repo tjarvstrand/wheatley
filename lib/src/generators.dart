@@ -31,11 +31,22 @@ Generator<int> integer({int? min, int? max, int? shrinkInterval}) {
     generate: (random, size) {
       final actualMin = min ?? -size;
       final actualMax = max ?? size;
-      return actualMin + _nextInt(random, actualMax - actualMin);
+      return actualMin + _nextInt(random, (actualMax - actualMin).abs());
     },
+    // TODO: Try smallest input first
     shrink: (input) sync* {
-      if (input > 0 && input > (min ?? 0)) yield input - (shrinkInterval ?? 1);
-      if (input < 0 && input < (max ?? 0)) yield input + (shrinkInterval ?? 1);
+      if (input > 0) {
+        final next = input - (shrinkInterval ?? 1);
+        if (next >= (min ?? 0)) {
+          yield next;
+        }
+      }
+      if (input < 0) {
+        final next = input + (shrinkInterval ?? 1);
+        if (next < (max ?? 0)) {
+          yield next;
+        }
+      }
     },
   );
 }
@@ -50,11 +61,22 @@ Generator<double> double_({double? min, double? max, double? shrinkInterval}) {
     generate: (random, size) {
       final actualMin = min ?? -size;
       final actualMax = max ?? size;
-      return actualMin + random.nextDouble() * (actualMax - actualMin);
+      return actualMin + random.nextDouble() * (actualMax - actualMin).abs();
     },
+    // TODO: Try smallest input first
     shrink: (input) sync* {
-      if (input > 0 && input > (min ?? 0)) yield input - (shrinkInterval ?? .01);
-      if (input < 0 && input < (max ?? 0)) yield input + (shrinkInterval ?? .01);
+      if (input > .0) {
+        final next = input - (shrinkInterval ?? 1.0);
+        if (next >= (min ?? 0)) {
+          yield next;
+        }
+      }
+      if (input < .0) {
+        final next = input + (shrinkInterval ?? 1.0);
+        if (next < (max ?? 0)) {
+          yield next;
+        }
+      }
     },
   );
 }
@@ -100,15 +122,21 @@ Generator<BigInt> bigInt({BigInt? min, BigInt? max, BigInt? shrinkInterval}) {
       final actualMin = min ?? BigInt.from(-size);
       final actualMax = max ?? BigInt.from(size);
       assert(actualMax > actualMin, 'min must be less than max');
-      final bits = (actualMax - actualMin).bitLength;
-      var bigInt = BigInt.zero;
-      for (var i = 0; i < bits; i++) {
-        bigInt = bigInt * BigInt.two;
-        if (random.nextBool()) {
-          bigInt += BigInt.one;
-        }
+      if (actualMax == actualMin) {
+        return actualMin;
       }
-      return actualMin + (bigInt % (actualMax - actualMin));
+
+      final valueRange = actualMax - actualMin;
+
+      var result = BigInt.zero;
+      for (var i = 0; i < valueRange.bitLength; i++) {
+        final nextResult = (result << 1) + (random.nextBool() ? BigInt.one : BigInt.zero);
+        if (actualMin + nextResult >= actualMax) {
+          break;
+        }
+        result = nextResult;
+      }
+      return actualMin + result;
     },
     shrink: (input) sync* {
       if (input > BigInt.zero) {
@@ -145,7 +173,7 @@ Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize})
   assert(minSize >= 0, 'minSize must be non-negative');
   assert(maxSize == null || maxSize >= minSize, 'maxSize must be greater than or equal to minSize');
   return (random, size) {
-    final actualMax = min(maxSize ?? size, size);
+    final actualMax = maxSize ?? size;
 
     if (actualMax == 0 || actualMax < minSize) {
       return Shrinkable([]);
@@ -182,13 +210,13 @@ Generator<Set<T>> setOf<T>(Set<T> items, {int minSize = 0, int? maxSize}) {
   );
 
   return (random, size) {
-    final actualMax = min(maxSize ?? size, size);
+    final actualMax = maxSize ?? size;
     if (actualMax == 0 || actualMax < minSize) {
       return Shrinkable({});
     }
 
     final indices = List.generate(items.length, (i) => i)..shuffle(random);
-    final length = minSize + _nextInt(random, actualMax - minSize);
+    final length = minSize + _nextInt(random, actualMax - minSize + 1);
     final shrinkables = indices.take(length).map((i) => Shrinkable(items.elementAt(i), (_) => [])).toList();
     final values = shrinkables.map((i) => i.value).toList();
 
