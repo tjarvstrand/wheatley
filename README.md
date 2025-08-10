@@ -6,15 +6,83 @@
 [![pub points](https://img.shields.io/pub/points/wheatley?logo=dart)](https://pub.dev/packages/wheatley/score)
 ![building](https://github.com/tjarvstrand/wheatley/workflows/wheatley/badge.svg)
 
-A property based testing framework for Dart, inspired by [Glados](https://pub.dev/packages/glados).
+Let you code generate your test cases for you!
 
-# Property based testing basics
+Wheatley is a property based testing (PBT) library for Dart, spiritual successor to [Glados](https://pub.dev/packages/glados).
 
+# Background
 Explaining the basics and virtues of property based testing is beyond the scope of this README, but
 if you are new to property based testing, or just want to learn more, here are some resources to get 
 you started:
 
+ - QuickCheck for Haskell is the OG PBT library. Check out the [the official manual](https://www.cse.chalmers.se/~rjmh/QuickCheck/manual.html). 
+   The OG PBT library. Even though the code snippets are all in Haskell, it still contains a lot of information that is relevant for PBT in general.  
  - F# for Fun and Profit, [The "Property Based Testing" series](https://fsharpforfunandprofit.com/series/property-based-testing/)
  - [Property based testing #1: What is it anyway?](https://getcode.substack.com/p/property-based-testing-1-what-is)
 
-More info coming soon.
+# Install
+Just add wheatley to your dev dependencies in `pubspec.yaml`:
+```yaml
+dev_dependencies:
+  wheatley: <current version>
+```
+
+# Usage
+
+import `wheatley.dart` and use `forAll` to verify that your properties hold true for all generated inputs, e.g.:
+```dart
+import 'package:test/test.dart';
+import 'package:wheatley/wheatley.dart';
+
+void main() {
+  test('My property is always true', () {
+    forAll(myGenerator)((value) => expect(value.myProperty, isTrue));
+  });
+}
+```
+
+You can configure `forAll` with an `Explore` config to control how many iterations to run, how fast to to scale the
+size of generated value, and even which `Random` instance to use.
+
+### Using more than one generator
+Generating a new value from two or more other generated values can be done in two different ways.
+
+The first option is to use the provided convenience versions of `forAll` (`forAll2`, `forAll3`, etc.), e.g.:
+```dart
+void main() {
+  test('My property is always true', () {
+    forAll3(g1, g2, g3)((v1, v2, v3) => expect(MyClass(v1, v2, v3).myProperty, isTrue));
+  });
+}
+```
+
+You can also use `zip`, to create a new generator from existing ones on-the fly:
+```dart
+void main() {
+  test('My property is always true', () {
+    forAll((g1, g2, g3).zip)((value) => expect(MyClass(value.$1, value.$2, value.$3).myProperty, isTrue));
+  });
+}
+```
+
+## Writing custom generators.
+A generator for a type `T` (`Generator<T>`) is just a function that receives a `Random` instance and a size, and returns
+a `Shrinkable`. A `Shrinkable` is essentially just a value, but a value that also knows how to make itself less 
+"complex", if possible. What complex means for a particular value is really up to the author of the generator.
+
+`GeneratorExtensions` defines a number of utilities to make it more convenient to create new custom generators based on 
+the already existing default ones. Arguably the most important one being `zip`, to combine two existing generators into
+one, e.g.:
+```dart
+Generator<MyClass> myClass = (g1, g2, g3).zip.map((values) => MyClass(values.$1, values.$2, values.$3));
+```
+
+**Note**: `forAllX` and `zip` are currently only have implementations for up to 8 values. Please open an issue if have
+need of more than that.
+
+# Thanks
+Huge thanks to [Marcel Garus](https://github.com/MarcelGarus) for creating the original Glados 
+library, which Wheatley has drawn a lot of inspiration from.
+
+# Contributing
+Contributions are welcome! Please open a PR or an issue if you have any suggestions or improvements.

@@ -21,11 +21,14 @@ final empty = always<Null>(null);
 
 final boolean = generator(generate: (random, _) => random.nextBool());
 
-/// Generates a non-negative random integer uniformly distributed in the range
-/// from [min], inclusive, to [max], exclusive.
+/// Generates a random integer uniformly distributed in the range from [min], inclusive, to [max], exclusive.
+///
+/// If [min] is not provided, it defaults to `-size`, and if [max] is not provided, it defaults to `size`.
+///
+/// [shrinkInterval] decides how fast the values are shrunk. If not provided, it defaults to `1.0`.
 ///
 /// See also [Random.nextInt]
-Generator<int> integer({int? min, int? max, int? shrinkInterval}) {
+Generator<int> integer({int? min, int? max, int shrinkInterval = 1}) {
   assert(min == null || max == null || min < max, 'min must be less than max');
   return generator(
     generate: (random, size) {
@@ -36,13 +39,13 @@ Generator<int> integer({int? min, int? max, int? shrinkInterval}) {
     // TODO: Try smallest input first
     shrink: (input) sync* {
       if (input > 0) {
-        final next = input - (shrinkInterval ?? 1);
+        final next = input - shrinkInterval;
         if (next >= (min ?? 0)) {
           yield next;
         }
       }
       if (input < 0) {
-        final next = input + (shrinkInterval ?? 1);
+        final next = input + shrinkInterval;
         if (next < (max ?? 0)) {
           yield next;
         }
@@ -54,8 +57,12 @@ Generator<int> integer({int? min, int? max, int? shrinkInterval}) {
 /// Generates a random floating point value uniformly distributed in the range from [min], inclusive, to [max],
 /// exclusive.
 ///
-/// See also [Random.nextDouble]
-Generator<double> double_({double? min, double? max, double? shrinkInterval}) {
+/// If [min] is not provided, it defaults to `-size`, and if [max] is not provided, it defaults to `size`.
+///
+/// [shrinkInterval] decides how fast the values are shrunk. If not provided, it defaults to `1`.
+///
+/// See also [Random.nextDouble].
+Generator<double> double_({double? min, double? max, double shrinkInterval = 1}) {
   assert(min == null || max == null || min < max, 'min must be less than max');
   return generator(
     generate: (random, size) {
@@ -66,13 +73,13 @@ Generator<double> double_({double? min, double? max, double? shrinkInterval}) {
     // TODO: Try smallest input first
     shrink: (input) sync* {
       if (input > .0) {
-        final next = input - (shrinkInterval ?? 1.0);
+        final next = input - shrinkInterval;
         if (next >= (min ?? 0)) {
           yield next;
         }
       }
       if (input < .0) {
-        final next = input + (shrinkInterval ?? 1.0);
+        final next = input + shrinkInterval;
         if (next < (max ?? 0)) {
           yield next;
         }
@@ -102,51 +109,60 @@ Generator<int> int64 = integer(
   max: 9223372036854775807,
 );
 
-Generator<double> positiveDouble({double shrinkInterval = .01}) =>
+Generator<double> positiveDouble({double shrinkInterval = 1}) =>
     double_(min: 0 + shrinkInterval, shrinkInterval: shrinkInterval);
-Generator<double> nonNegativeDouble({double shrinkInterval = .01}) => double_(min: 0, shrinkInterval: shrinkInterval);
-Generator<double> negativeDouble({double shrinkInterval = .01}) =>
+Generator<double> nonNegativeDouble({double shrinkInterval = 1}) => double_(min: 0, shrinkInterval: shrinkInterval);
+Generator<double> negativeDouble({double shrinkInterval = 1}) =>
     double_(max: 0 - shrinkInterval, shrinkInterval: shrinkInterval);
-Generator<double> nonPositiveDouble({double shrinkInterval = .01}) => double_(max: 0, shrinkInterval: shrinkInterval);
+Generator<double> nonPositiveDouble({double shrinkInterval = 1}) => double_(max: 0, shrinkInterval: shrinkInterval);
 
-Generator<num> number({num? min, num? max, num? shrinkInterval}) => boolean.flatMap(
+/// Generates a random number uniformly distributed in the range from [min], inclusive, to [max], exclusive.
+///
+/// If [min] is not provided, it defaults to `-size`, and if [max] is not provided, it defaults to `size`.
+///
+/// [shrinkInterval] decides how fast the values are shrunk. If not provided, it defaults to `1`.
+Generator<num> number({num? min, num? max, num shrinkInterval = 1.0}) => boolean.flatMap(
   (v) =>
       v
-          ? integer(min: min?.toInt(), max: max?.toInt(), shrinkInterval: shrinkInterval?.toInt())
-          : double_(min: min?.toDouble(), max: max?.toDouble(), shrinkInterval: shrinkInterval?.toDouble()),
+          ? integer(min: min?.toInt(), max: max?.toInt(), shrinkInterval: shrinkInterval.toInt())
+          : double_(min: min?.toDouble(), max: max?.toDouble(), shrinkInterval: shrinkInterval.toDouble()),
 );
 
-Generator<BigInt> bigInt({BigInt? min, BigInt? max, BigInt? shrinkInterval}) {
-  return generator(
-    generate: (random, size) {
-      final actualMin = min ?? BigInt.from(-size);
-      final actualMax = max ?? BigInt.from(size);
-      assert(actualMax > actualMin, 'min must be less than max');
-      if (actualMax == actualMin) {
-        return actualMin;
-      }
+/// Generates a random [BigInt] value uniformly distributed in the range from [min], inclusive, to [max],
+/// exclusive.
+///
+/// If [min] is not provided, it defaults to `-size`, and if [max] is not provided, it defaults to `size`.
+///
+/// [shrinkInterval] decides how fast the values are shrunk. If not provided, it defaults to `BigInt.one`.
+Generator<BigInt> bigInt({BigInt? min, BigInt? max, BigInt? shrinkInterval}) => generator(
+  generate: (random, size) {
+    final actualMin = min ?? BigInt.from(-size);
+    final actualMax = max ?? BigInt.from(size);
+    assert(actualMax > actualMin, 'min must be less than max');
+    if (actualMax == actualMin) {
+      return actualMin;
+    }
 
-      final valueRange = actualMax - actualMin;
+    final valueRange = actualMax - actualMin;
 
-      var result = BigInt.zero;
-      for (var i = 0; i < valueRange.bitLength; i++) {
-        final nextResult = (result << 1) + (random.nextBool() ? BigInt.one : BigInt.zero);
-        if (actualMin + nextResult >= actualMax) {
-          break;
-        }
-        result = nextResult;
+    var result = BigInt.zero;
+    for (var i = 0; i < valueRange.bitLength; i++) {
+      final nextResult = (result << 1) + (random.nextBool() ? BigInt.one : BigInt.zero);
+      if (actualMin + nextResult >= actualMax) {
+        break;
       }
-      return actualMin + result;
-    },
-    shrink: (input) sync* {
-      if (input > BigInt.zero) {
-        yield input - (shrinkInterval ?? BigInt.one);
-      } else if (input < BigInt.zero) {
-        yield input + (shrinkInterval ?? BigInt.one);
-      }
-    },
-  );
-}
+      result = nextResult;
+    }
+    return actualMin + result;
+  },
+  shrink: (input) sync* {
+    if (input > BigInt.zero) {
+      yield input - (shrinkInterval ?? BigInt.one);
+    } else if (input < BigInt.zero) {
+      yield input + (shrinkInterval ?? BigInt.one);
+    }
+  },
+);
 
 /// Chooses between the given values. Values further at the front of the list are considered less complex.
 Generator<T> oneOf<T>(Iterable<T> values) {
@@ -169,6 +185,10 @@ Generator<T> oneOf<T>(Iterable<T> values) {
   );
 }
 
+/// Generates a list of random length, containing items from the provided [item] generator.
+///
+/// The length of the list is at least [minSize] and at most [maxSize]. If [maxSize] is not provided, it
+/// defaults `size`.
 Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize}) {
   assert(minSize >= 0, 'minSize must be non-negative');
   assert(maxSize == null || maxSize >= minSize, 'maxSize must be greater than or equal to minSize');
@@ -200,6 +220,10 @@ Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize})
   };
 }
 
+/// Generates a set of random length, containing items from the provided set of items [items].items
+///
+/// The length of the set is at least [minSize] and at most [maxSize]. If [maxSize] cannot be larger than the size of
+/// [items], and if not provided, it defaults to `size` or `items.length`, whichever is smaller.
 Generator<Set<T>> setOf<T>(Set<T> items, {int minSize = 0, int? maxSize}) {
   assert(minSize >= 0, 'minSize must not be negative');
   assert(maxSize == null || maxSize >= 0, 'maxSize must not be negative');
@@ -237,8 +261,14 @@ Generator<Set<T>> setOf<T>(Set<T> items, {int minSize = 0, int? maxSize}) {
   };
 }
 
-Generator<Map<K, V>> mapOf<K, V>(Generator<K> key, Generator<V> value, {int minSize = 0, int? maxSize}) =>
-    listOf(key.zip(value).map((kv) => MapEntry(kv.$1, kv.$2)), minSize: minSize, maxSize: maxSize).map(Map.fromEntries);
+/// Generates a map of random size, containing items from the provided [key], and [value] generators.
+///
+/// The size of the map is at least [minSize] and at most [maxSize]. If [maxSize] is not provided, it defaults `size`.
+Generator<Map<K, V>> mapOf<K, V>(Generator<K> key, Generator<V> value, {int minSize = 0, int? maxSize}) => listOf(
+  key.distinct().zip(value).map((kv) => MapEntry(kv.$1, kv.$2)),
+  minSize: minSize,
+  maxSize: maxSize,
+).map(Map.fromEntries);
 
 /// A generator that returns [DateTime]s.
 ///
@@ -267,8 +297,6 @@ const asciiAlphaNumeric = '$asciiLetters$digits';
 /// A generator that returns [String]s.
 ///
 /// By default it generates ASCII alphanumeric strings.
-///
-/// [minSize] is inclusive, and [maxSize] is exclusive.
 Generator<String> string({String chars = asciiAlphaNumeric, int minSize = 0, int? maxSize}) => listOf(
   oneOf(chars.characters.toList()),
   minSize: minSize,
@@ -276,6 +304,9 @@ Generator<String> string({String chars = asciiAlphaNumeric, int minSize = 0, int
 ).map((listOfChars) => listOfChars.join());
 
 extension StringGeneratorExtension on Generator<String> {
+  /// Returns a new [Generator] that produces only lower case strings.
   Generator<String> get lowerCase => map((s) => s.toLowerCase());
+
+  /// Returns a new [Generator] that produces only upper case strings.
   Generator<String> get upperCase => map((s) => s.toUpperCase());
 }

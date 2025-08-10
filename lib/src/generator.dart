@@ -35,11 +35,22 @@ extension GeneratorExtensions<T> on Generator<T> {
 
   Generator<(T, T2)> zip<T2>(Generator<T2> other) => (random, size) => this(random, size).zip(other(random, size));
 
+  /// Returns a new [Generator] that will only produce values that satisfy the [test] function.
+  ///
+  /// Fails if it cannot produce a new value after [maxTests] attempts.
   Generator<T> where(bool Function(T) test, {int maxTests = 1000}) =>
       (random, size) => Iterable.generate(maxTests, (_) => this(random, size)).firstWhere(
         (s) => test(s.value),
         orElse: () => throw ArgumentError('Failed to generate a valid ${T} input in $maxTests iterations'),
       );
+
+  /// Returns a new [Generator] stateful generator that will not produce the same value twice.
+  ///
+  /// Fails if it cannot produce a new value after [maxTests] attempts.
+  Generator<T> distinct({int maxTests = 1000}) {
+    final seen = <T>{};
+    return where(seen.add, maxTests: maxTests);
+  }
 
   /// Explores the input space for inputs that break the property. This works by gradually increasing the size.
   ///
