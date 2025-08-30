@@ -46,10 +46,10 @@ void main() {
     group('double_', () {
       test(
         'double_generates valid values',
-        () => forAll(double_(min: 0, max: 5))((v) => expect(v >= 0 && v < 5, isTrue)),
+        () => forAll(float(min: 0, max: 5))((v) => expect(v >= 0 && v < 5, isTrue)),
       );
       test('double_ shrinks according to shrinkInterval', () {
-        expect(double_(min: 0, max: 2, shrinkInterval: .5)(MockedRandom(doubles: [1]), 1).allValues, [
+        expect(float(min: 0, max: 2, shrinkInterval: .5)(MockedRandom(doubles: [1]), 1).allValues, [
           2.0,
           1.5,
           1.0,
@@ -58,7 +58,7 @@ void main() {
         ]);
         // Since max is exclusive, negative values should only shrink down the value closes to 0 that can be reached
         // by incrementally subtracting shrinkInterval from the original value.
-        expect(double_(min: -2, max: 0, shrinkInterval: .5)(MockedRandom(doubles: [0]), 1).allValues, [
+        expect(float(min: -2, max: 0, shrinkInterval: .5)(MockedRandom(doubles: [0]), 1).allValues, [
           -2.0,
           -1.5,
           -1.0,

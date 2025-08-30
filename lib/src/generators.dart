@@ -14,7 +14,7 @@ int _nextInt(Random random, int maxValue) =>
         : random.nextInt(maxValue);
 
 /// Always generates the same value.
-Generator<T> always<T>(T value) => (random, size) => Candidate(value, (_) => []);
+Generator<T> always<T>(T value) => (random, size) => Candidate(value, shrink: (_) => []);
 
 /// A constant generator that always returns `null`.
 final empty = always<Null>(null);
@@ -62,7 +62,7 @@ Generator<int> integer({int? min, int? max, int shrinkInterval = 1}) {
 /// [shrinkInterval] decides how fast the values are shrunk. If not provided, it defaults to `1`.
 ///
 /// See also [Random.nextDouble].
-Generator<double> double_({double? min, double? max, double shrinkInterval = 1}) {
+Generator<double> float({double? min, double? max, double shrinkInterval = 1}) {
   assert(min == null || max == null || min < max, 'min must be less than max');
   return generator(
     generate: (random, size) {
@@ -110,11 +110,11 @@ Generator<int> int64 = integer(
 );
 
 Generator<double> positiveDouble({double shrinkInterval = 1}) =>
-    double_(min: 0 + shrinkInterval, shrinkInterval: shrinkInterval);
-Generator<double> nonNegativeDouble({double shrinkInterval = 1}) => double_(min: 0, shrinkInterval: shrinkInterval);
+    float(min: 0 + shrinkInterval, shrinkInterval: shrinkInterval);
+Generator<double> nonNegativeDouble({double shrinkInterval = 1}) => float(min: 0, shrinkInterval: shrinkInterval);
 Generator<double> negativeDouble({double shrinkInterval = 1}) =>
-    double_(max: 0 - shrinkInterval, shrinkInterval: shrinkInterval);
-Generator<double> nonPositiveDouble({double shrinkInterval = 1}) => double_(max: 0, shrinkInterval: shrinkInterval);
+    float(max: 0 - shrinkInterval, shrinkInterval: shrinkInterval);
+Generator<double> nonPositiveDouble({double shrinkInterval = 1}) => float(max: 0, shrinkInterval: shrinkInterval);
 
 /// Generates a random number uniformly distributed in the range from [min], inclusive, to [max], exclusive.
 ///
@@ -125,7 +125,7 @@ Generator<num> number({num? min, num? max, num shrinkInterval = 1.0}) => boolean
   (v) =>
       v
           ? integer(min: min?.toInt(), max: max?.toInt(), shrinkInterval: shrinkInterval.toInt())
-          : double_(min: min?.toDouble(), max: max?.toDouble(), shrinkInterval: shrinkInterval.toDouble()),
+          : float(min: min?.toDouble(), max: max?.toDouble(), shrinkInterval: shrinkInterval.toDouble()),
 );
 
 /// Generates a random [BigInt] value uniformly distributed in the range from [min], inclusive, to [max],
@@ -203,20 +203,25 @@ Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize})
     final candidates = List.generate(length, (_) => item(random, size));
     final values = candidates.map((i) => i.value).toList();
 
-    return Candidate(values, (v) sync* {
-      if (candidates.isEmpty) {
-        return;
-      }
-      yield Candidate(values.take(minSize).toList());
+    return Candidate(
+      values,
+      shrink: (v) sync* {
+        if (candidates.isEmpty) {
+          return;
+        }
+        yield Candidate(values.take(minSize).toList());
 
-      for (var i = values.length; i > 1; i--) {
-        yield Candidate(values.sublist(1, i));
-      }
+        for (var i = values.length; i > 1; i--) {
+          yield Candidate(values.sublist(1, i));
+        }
 
-      for (var i = candidates.length - 1; i >= 0; i--) {
-        yield* candidates[i].map((v) => values..[i] = v).shrunk;
-      }
-    });
+        for (var i = candidates.length - 1; i >= 0; i--) {
+          yield* candidates[i].map((v) => values..[i] = v).shrunk;
+        }
+      },
+      // Since candidates are not recreated or copied when shrinking, we only need to dispose them once each.
+      dispose: (values) => candidates.forEach((c) => c.dispose(c.value)),
+    );
   };
 }
 
@@ -241,23 +246,28 @@ Generator<Set<T>> setOf<T>(Set<T> items, {int minSize = 0, int? maxSize}) {
 
     final indices = List.generate(items.length, (i) => i)..shuffle(random);
     final length = minSize + _nextInt(random, actualMax - minSize + 1);
-    final candidates = indices.take(length).map((i) => Candidate(items.elementAt(i), (_) => [])).toList();
+    final candidates = indices.take(length).map((i) => Candidate(items.elementAt(i), shrink: (_) => [])).toList();
     final values = candidates.map((i) => i.value).toList();
 
-    return Candidate(values.toSet(), (v) sync* {
-      if (candidates.isEmpty) {
-        return;
-      }
-      yield Candidate(values.take(minSize).toSet());
+    return Candidate(
+      values.toSet(),
+      shrink: (v) sync* {
+        if (candidates.isEmpty) {
+          return;
+        }
+        yield Candidate(values.take(minSize).toSet());
 
-      for (var i = values.length; i > 1; i--) {
-        yield Candidate(values.sublist(1, i).toSet());
-      }
+        for (var i = values.length; i > 1; i--) {
+          yield Candidate(values.sublist(1, i).toSet());
+        }
 
-      for (var i = candidates.length - 1; i >= 0; i--) {
-        yield* candidates[i].map((v) => Set.of(values..[i] = v)).shrunk;
-      }
-    });
+        for (var i = candidates.length - 1; i >= 0; i--) {
+          yield* candidates[i].map((v) => Set.of(values..[i] = v)).shrunk;
+        }
+      },
+      // Since candidates are not recreated or copied when shrinking, we only need to dispose them once each.
+      dispose: (values) => candidates.forEach((c) => c.dispose(c.value)),
+    );
   };
 }
 

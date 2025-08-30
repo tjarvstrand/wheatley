@@ -1,2 +1,11 @@
 [tools]
 dart = "3.7.1"
+
+
+[tasks.coverage]
+description = "Run tests with coverage"
+run = "dart run coverage:test_with_coverage --fail-under 80"
+
+[tasks.coverageReport]
+description = "Generate coverage report"
+run = "genhtml coverage/lcov.info -o coverage/html"

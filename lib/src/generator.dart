@@ -15,8 +15,10 @@ typedef Generator<T> = Candidate<T> Function(math.Random random, int size);
 Generator<T> generator<T>({
   required T Function(math.Random random, int size) generate,
   Iterable<T> Function(T input)? shrink,
+  void Function(T value)? dispose,
 }) {
-  Candidate<T> generateCandidate(T value) => Candidate(value, (v) => shrink?.call(v).map(generateCandidate) ?? []);
+  Candidate<T> generateCandidate(T value) =>
+      Candidate(value, shrink: (v) => shrink?.call(v).map(generateCandidate) ?? [], dispose: dispose);
   return (random, size) => generateCandidate(generate(random, size));
 }
 
@@ -24,15 +26,33 @@ Generator<T> generator<T>({
 extension GeneratorExtensions<T> on Generator<T> {
   /// Transforms this [Generator] into a new [Generator] that produces values of type [T2] by applying [mapper] to its
   /// values.
-  Generator<T2> map<T2>(T2 Function(T value) mapper) => (random, size) => this(random, size).map(mapper);
+  Generator<T2> map<T2>(T2 Function(T value) mapper, {void Function(T2)? dispose}) =>
+      (random, size) => this(random, size).map(mapper, dispose: dispose);
 
   /// Transforms this [Generator] into a new [Generator] that produces values of type [T2] by applying [mapper] to its
   /// values.
-  Generator<T2> flatMap<T2>(Generator<T2> Function(T) mapper) =>
-      (random, size) => mapper(this(random, size).value)(random, size);
+  Generator<T2> flatMap<T2>(Generator<T2> Function(T) mapper) => (random, size) {
+    final candidate = this(random, size);
+    final mapped = mapper(candidate.value)(random, size);
+    return Candidate(
+      mapped.value,
+      shrink: (_) => mapped.shrunk,
+      dispose: (v) {
+        candidate.dispose(candidate.value);
+        mapped.dispose(v);
+      },
+    );
+  };
 
+  /// Returns a new generator with candidates that can be shrunk to `null` in addition to this [Generator]'s candidates
+  /// shrink candidates.
   Generator<T?> get nullable => (random, size) => this(random, size).nullable;
 
+  /// Returns a new [Generator] that combines the resulting candidates of this [Generator] with candidates from [other]
+  /// in a tuple.
+  ///
+  /// The shrink candidates of the resulting [Candidate] is the Cartesian product of the shrink candidates of this
+  /// and [other].
   Generator<(T, T2)> zip<T2>(Generator<T2> other) => (random, size) => this(random, size).zip(other(random, size));
 
   /// Returns a new [Generator] that will only produce values that satisfy the [test] function.
@@ -67,10 +87,14 @@ extension GeneratorExtensions<T> on Generator<T> {
         await body(candidate.value);
       } catch (error, stackTrace) {
         return (index + 1, candidate, error, stackTrace);
+      } finally {
+        candidate.dispose(candidate.value);
       }
     }
     return null;
   }
+
+  Generator<T> get single => (random, size) => this(random, size).unshrinkable;
 }
 
 // coverage:ignore-start

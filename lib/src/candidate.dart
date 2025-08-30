@@ -5,12 +5,20 @@ import 'package:meta/meta.dart';
 /// Represents a value that is a candidate that could possibly falsify a property. [Candidate]s can be shrunk to make
 /// them "simpler", in order to find the simplest possible input that still falsifies the property.
 class Candidate<T> {
-  Candidate(this.value, [Iterable<Candidate<T>> Function(T)? shrink]) : _shrink = shrink ?? ((_) => const []);
+  Candidate(this.value, {Iterable<Candidate<T>> Function(T)? shrink, void Function(T)? dispose})
+    : _shrink = shrink ?? ((_) => const []),
+      dispose = dispose ?? ((_) {});
 
   /// The value of this [Candidate].
   final T value;
 
-  Candidate<T> withValue(T newValue) => Candidate(newValue, _shrink);
+  /// Called to clean up resources when this [Candidate] is no longer needed.
+  @internal
+  final void Function(T) dispose;
+
+  Candidate<T> withValue(T newValue) => Candidate(newValue, shrink: _shrink, dispose: dispose);
+
+  Candidate<T> get unshrinkable => Candidate(value, dispose: dispose);
 
   /// Generates an [Iterable] of [Candidate]s that fulfill the following criteria:
   ///
@@ -28,51 +36,105 @@ class Candidate<T> {
 
   /// Shrinks this [Candidate] input until it can no longer be shrunk or until test no longer throws an error when
   /// using the shrunken value as input.
-  Future<(int, T)> shrinkUntilDone(FutureOr<void> Function(T) test) async {
+  ///
+  /// Note that the returned [Candidate] is not disposed, it is the callers responsibility to do so, if necessary.
+  Future<(int, Candidate<T>)> shrinkUntilDone(FutureOr<void> Function(T) test) async {
     var shrinks = 0;
     var currentInput = this;
 
-    outer:
     while (true) {
-      for (final shrunkInput in currentInput.shrunk) {
-        shrinks++;
+      final candidates = currentInput.shrunk;
+      if (candidates.isEmpty) {
+        return (shrinks, currentInput);
+      }
+      shrinks++;
+      final falsifyingCandidate = await _firstFalsifyingCandidate(test, candidates);
+      if (falsifyingCandidate == null) {
+        return (shrinks, currentInput);
+      }
+      currentInput.dispose(currentInput.value);
+      currentInput = falsifyingCandidate;
+    }
+  }
+
+  Future<Candidate<T>?> _firstFalsifyingCandidate(
+    FutureOr<void> Function(T) test,
+    Iterable<Candidate<T>> candidates,
+  ) async {
+    var falsified = false;
+    Candidate<T>? result = null;
+    for (final candidate in candidates) {
+      if (falsified) {
+        candidate.dispose(candidate.value);
+      } else {
         try {
-          await test(shrunkInput.value);
+          await test(candidate.value);
+          candidate.dispose(candidate.value);
         } catch (_) {
-          currentInput = shrunkInput;
-          shrinks++;
-          continue outer;
+          if (result != null) {
+            result.dispose(result.value);
+          }
+          falsified = true;
+          result = candidate;
         }
       }
-      break;
     }
-    return (shrinks, currentInput.value);
+    return result;
   }
 
   /// Returns a new [Candidate] where [mapper] is applied to the value of this [Candidate].
-  Candidate<T2> map<T2>(T2 Function(T value) mapper) =>
-      Candidate(mapper(value), (_) => shrunk.map((candidate) => candidate.map(mapper)));
+  Candidate<T2> map<T2>(T2 Function(T value) mapper, {void Function(T2)? dispose}) => Candidate(
+    mapper(value),
+    shrink:
+        (_) => shrunk.map(
+          (candidate) => candidate.map(
+            mapper,
+            dispose: (v) {
+              candidate.dispose(value);
+              dispose?.call(v);
+            },
+          ),
+        ),
+    dispose: (v) {
+      this.dispose(value);
+      dispose?.call(v);
+    },
+  );
 
   /// Returns a new [Candidate] where [mapper] is applied to the value of this [Candidate].
-  Candidate<T2> flatMap<T2>(Candidate<T2> Function(T value) mapper) =>
-      Candidate(mapper(value).value, (_) => shrunk.map((s) => mapper(s.value)));
+  Candidate<T2> flatMap<T2>(Candidate<T2> Function(T value) mapper, {void Function(T2)? dispose}) =>
+      Candidate(mapper(value).value, shrink: (v) => shrunk.map((s) => mapper(s.value)), dispose: dispose);
 
   /// Returns a new [Candidate] that can be shrunk to `null` in addition to this [Candidate]s shrink candidates.
-  Candidate<T?> get nullable =>
-      Candidate<T?>(value, (_) => shrunk.cast<Candidate<T?>>().followedBy([Candidate<T?>(null, (_) => [])]));
+  Candidate<T?> get nullable => Candidate<T?>(
+    value,
+    shrink: (_) => shrunk.cast<Candidate<T?>>().followedBy([Candidate<T?>(null, shrink: (_) => [])]),
+    dispose: (v) {
+      if (v != null) {
+        dispose(v);
+      }
+    },
+  );
 
   /// Returns a new [Candidate] that combines the result of this [Candidate] with [other] in a tuple.
   ///
   /// The shrink candidates of the resulting [Candidate] is the Cartesian product of the shrink candidates of this
   /// and [other].
-  Candidate<(T, T2)> zip<T2>(Candidate<T2> other) => Candidate<(T, T2)>((value, other.value), (_) {
-    final thisShrink = shrunk;
-    if (thisShrink.isNotEmpty) {
-      return thisShrink.map((shrunk) => shrunk.zip(other));
-    }
-    final otherShrink = other.shrunk;
-    return otherShrink.map((shrunk) => shrunk.map((otherValue) => (value, otherValue)));
-  });
+  Candidate<(T, T2)> zip<T2>(Candidate<T2> other) => Candidate<(T, T2)>(
+    (value, other.value),
+    shrink: (_) {
+      final thisShrink = shrunk;
+      if (thisShrink.isNotEmpty) {
+        return thisShrink.map((shrunk) => shrunk.zip(other));
+      }
+      final otherShrink = other.shrunk;
+      return otherShrink.map((shrunk) => shrunk.map((otherValue) => (value, otherValue)));
+    },
+    dispose: (vs) {
+      dispose(vs.$1);
+      other.dispose(vs.$2);
+    },
+  );
 
   /// Returns an [Iterable] of this [Candidate]s value and all values that it can shrink to.
   ///
