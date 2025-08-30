@@ -67,7 +67,7 @@ void main() {
 
 ## Writing custom generators.
 A generator for a type `T` (`Generator<T>`) is just a function that receives a `Random` instance and a size, and returns
-a `Shrinkable`. A `Shrinkable` is essentially just a value, but a value that also knows how to make itself less 
+a `Candidate`. A `Candidate` is essentially just a value, but a value that also knows how to make itself less 
 "complex", if possible. What complex means for a particular value is really up to the author of the generator.
 
 `GeneratorExtensions` defines a number of utilities to make it more convenient to create new custom generators based on 

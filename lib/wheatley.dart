@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:wheatley/src/explore_config.dart';
 import 'package:wheatley/src/generator.dart';
 
+export 'package:wheatley/src/candidate.dart';
 export 'package:wheatley/src/generator.dart';
 export 'package:wheatley/src/generators.dart';
-export 'package:wheatley/src/shrinkable.dart';
 
 void _defaultErrorLogger(String message) => stderr.writeln(message);
 

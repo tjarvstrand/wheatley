@@ -23,9 +23,9 @@ void main() {
 
     group('nullable', () {
       test('allows shrinking down to null', () {
-        final shrinkable = gen.always(1).nullable(MockedRandom(), 1);
-        expect(shrinkable.allValues, [1, null]);
-        expect(shrinkable.shrunk.map((s) => s.value), [null]);
+        final candidate = gen.always(1).nullable(MockedRandom(), 1);
+        expect(candidate.allValues, [1, null]);
+        expect(candidate.shrunk.map((s) => s.value), [null]);
       });
     });
 

@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:wheatley/src/candidate.dart';
 import 'package:wheatley/src/explore_config.dart';
-import 'package:wheatley/src/shrinkable.dart';
 
 /// A [Generator] makes it possible to use Wheatley to test type [T].
-/// Generates a new [Shrinkable] of type [T], using [size] as a rough
+/// Generates a new [Candidate] of type [T], using [size] as a rough
 /// complexity estimate. The [random] instance should be used as a source for
 /// all pseudo-randomness.
-typedef Generator<T> = Shrinkable<T> Function(math.Random random, int size);
+typedef Generator<T> = Candidate<T> Function(math.Random random, int size);
 
 /// Creates a new, simple [Generator] that produces values and knows how to
 /// simplify them.
@@ -16,8 +16,8 @@ Generator<T> generator<T>({
   required T Function(math.Random random, int size) generate,
   Iterable<T> Function(T input)? shrink,
 }) {
-  Shrinkable<T> generateShrinkable(T value) => Shrinkable(value, (v) => shrink?.call(v).map(generateShrinkable) ?? []);
-  return (random, size) => generateShrinkable(generate(random, size));
+  Candidate<T> generateCandidate(T value) => Candidate(value, (v) => shrink?.call(v).map(generateCandidate) ?? []);
+  return (random, size) => generateCandidate(generate(random, size));
 }
 
 /// Useful methods on [Generator]s.
@@ -55,18 +55,18 @@ extension GeneratorExtensions<T> on Generator<T> {
   /// Explores the input space for inputs that break the property. This works by gradually increasing the size.
   ///
   /// Returns the first value where the property is broken, if any.
-  Future<(int, Shrinkable<T>, Object, StackTrace)?> explore(
+  Future<(int, Candidate<T>, Object, StackTrace)?> explore(
     ExploreConfig config,
     FutureOr<void> Function(T) body,
   ) async {
     final sizes = Iterable<(int, int)>.generate(config.runs, (i) => (i, config.initialSize + i * config.sizeIncrement));
 
     for (final (index, size) in sizes) {
-      final shrinkable = this(config.random, size);
+      final candidate = this(config.random, size);
       try {
-        await body(shrinkable.value);
+        await body(candidate.value);
       } catch (error, stackTrace) {
-        return (index + 1, shrinkable, error, stackTrace);
+        return (index + 1, candidate, error, stackTrace);
       }
     }
     return null;

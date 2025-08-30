@@ -7,7 +7,7 @@ class ExploreConfig {
   const ExploreConfig({this.runs = 100, this.initialSize = 10, this.sizeIncrement = 1, Random? random})
     : assert(runs > 0, 'Number of runs must be greater than 0'),
       assert(initialSize > 0, 'Initial size must be greater than 0'),
-      assert(sizeIncrement >= 0, 'Speed must be greater than or equal to 0'),
+      assert(sizeIncrement >= 0, 'Size increment must be greater than or equal to 0'),
       _random = random;
 
   /// The number of runs after which to stop trying to break the property.

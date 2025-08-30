@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:characters/characters.dart';
 import 'package:wheatley/src/_no_value_provided.dart';
+import 'package:wheatley/src/candidate.dart';
 import 'package:wheatley/src/generator.dart';
-import 'package:wheatley/src/shrinkable.dart';
 
 export 'package:wheatley/src/generator.dart';
 
@@ -14,7 +14,7 @@ int _nextInt(Random random, int maxValue) =>
         : random.nextInt(maxValue);
 
 /// Always generates the same value.
-Generator<T> always<T>(T value) => (random, size) => Shrinkable(value, (_) => []);
+Generator<T> always<T>(T value) => (random, size) => Candidate(value, (_) => []);
 
 /// A constant generator that always returns `null`.
 final empty = always<Null>(null);
@@ -196,25 +196,25 @@ Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize})
     final actualMax = maxSize ?? size;
 
     if (actualMax == 0 || actualMax < minSize) {
-      return Shrinkable([]);
+      return Candidate([]);
     }
 
     final length = minSize + _nextInt(random, actualMax - minSize + 1);
-    final shrinkables = List.generate(length, (_) => item(random, size));
-    final values = shrinkables.map((i) => i.value).toList();
+    final candidates = List.generate(length, (_) => item(random, size));
+    final values = candidates.map((i) => i.value).toList();
 
-    return Shrinkable(values, (v) sync* {
-      if (shrinkables.isEmpty) {
+    return Candidate(values, (v) sync* {
+      if (candidates.isEmpty) {
         return;
       }
-      yield Shrinkable(values.take(minSize).toList());
+      yield Candidate(values.take(minSize).toList());
 
       for (var i = values.length; i > 1; i--) {
-        yield Shrinkable(values.sublist(1, i));
+        yield Candidate(values.sublist(1, i));
       }
 
-      for (var i = shrinkables.length - 1; i >= 0; i--) {
-        yield* shrinkables[i].map((v) => values..[i] = v).shrunk;
+      for (var i = candidates.length - 1; i >= 0; i--) {
+        yield* candidates[i].map((v) => values..[i] = v).shrunk;
       }
     });
   };
@@ -236,26 +236,26 @@ Generator<Set<T>> setOf<T>(Set<T> items, {int minSize = 0, int? maxSize}) {
   return (random, size) {
     final actualMax = maxSize ?? size;
     if (actualMax == 0 || actualMax < minSize) {
-      return Shrinkable({});
+      return Candidate({});
     }
 
     final indices = List.generate(items.length, (i) => i)..shuffle(random);
     final length = minSize + _nextInt(random, actualMax - minSize + 1);
-    final shrinkables = indices.take(length).map((i) => Shrinkable(items.elementAt(i), (_) => [])).toList();
-    final values = shrinkables.map((i) => i.value).toList();
+    final candidates = indices.take(length).map((i) => Candidate(items.elementAt(i), (_) => [])).toList();
+    final values = candidates.map((i) => i.value).toList();
 
-    return Shrinkable(values.toSet(), (v) sync* {
-      if (shrinkables.isEmpty) {
+    return Candidate(values.toSet(), (v) sync* {
+      if (candidates.isEmpty) {
         return;
       }
-      yield Shrinkable(values.take(minSize).toSet());
+      yield Candidate(values.take(minSize).toSet());
 
       for (var i = values.length; i > 1; i--) {
-        yield Shrinkable(values.sublist(1, i).toSet());
+        yield Candidate(values.sublist(1, i).toSet());
       }
 
-      for (var i = shrinkables.length - 1; i >= 0; i--) {
-        yield* shrinkables[i].map((v) => Set.of(values..[i] = v)).shrunk;
+      for (var i = candidates.length - 1; i >= 0; i--) {
+        yield* candidates[i].map((v) => Set.of(values..[i] = v)).shrunk;
       }
     });
   };
