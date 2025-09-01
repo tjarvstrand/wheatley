@@ -22,7 +22,7 @@ Future<void> Function(FutureOr<void> Function(T)) forAll<T>(
   }
 
   final (sampleCount, input, error, stackTrace) = failure;
-  final (shrinkCount, shrunkInput) = await input.shrinkUntilDone(body);
+  final (shrinkCount, shrunkInput) = await input.shrinkUntilDone(body, config.maxShrinks);
   log('Tested $sampleCount inputs, shrunk $shrinkCount times');
   log('Failing for input: ${input.value}\n');
   log('Smallest failing input: ${shrunkInput.value}\n');

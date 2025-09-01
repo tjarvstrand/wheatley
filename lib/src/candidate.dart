@@ -38,11 +38,11 @@ class Candidate<T> {
   /// using the shrunken value as input.
   ///
   /// Note that the returned [Candidate] is not disposed, it is the callers responsibility to do so, if necessary.
-  Future<(int, Candidate<T>)> shrinkUntilDone(FutureOr<void> Function(T) test) async {
+  Future<(int, Candidate<T>)> shrinkUntilDone(FutureOr<void> Function(T) test, [int? maxShrinks]) async {
     var shrinks = 0;
     var currentInput = this;
 
-    while (true) {
+    while (maxShrinks == null || shrinks < maxShrinks) {
       final candidates = currentInput.shrunk;
       if (candidates.isEmpty) {
         return (shrinks, currentInput);
@@ -50,11 +50,12 @@ class Candidate<T> {
       shrinks++;
       final falsifyingCandidate = await _firstFalsifyingCandidate(test, candidates);
       if (falsifyingCandidate == null) {
-        return (shrinks, currentInput);
+        break;
       }
       currentInput.dispose(currentInput.value);
       currentInput = falsifyingCandidate;
     }
+    return (shrinks, currentInput);
   }
 
   Future<Candidate<T>?> _firstFalsifyingCandidate(

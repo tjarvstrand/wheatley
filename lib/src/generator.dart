@@ -93,8 +93,6 @@ extension GeneratorExtensions<T> on Generator<T> {
     }
     return null;
   }
-
-  Generator<T> get single => (random, size) => this(random, size).unshrinkable;
 }
 
 // coverage:ignore-start

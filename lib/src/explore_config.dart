@@ -4,11 +4,14 @@ final _defaultRandom = Random();
 
 /// Configuration for several parameters used during the exploration phase.
 class ExploreConfig {
-  const ExploreConfig({this.runs = 100, this.initialSize = 10, this.sizeIncrement = 1, Random? random})
+  const ExploreConfig({this.runs = 100, this.initialSize = 10, this.sizeIncrement = 1, this.maxShrinks, Random? random})
     : assert(runs > 0, 'Number of runs must be greater than 0'),
       assert(initialSize > 0, 'Initial size must be greater than 0'),
       assert(sizeIncrement >= 0, 'Size increment must be greater than or equal to 0'),
       _random = random;
+
+  factory ExploreConfig.single({int size = 10, Random? random}) =>
+      ExploreConfig(runs: 1, initialSize: size, maxShrinks: 0, random: random);
 
   /// The number of runs after which to stop trying to break the property.
   final int runs;
@@ -22,4 +25,6 @@ class ExploreConfig {
   /// The [Random] used for generating all randomness.
   final Random? _random;
   Random get random => _random ?? _defaultRandom;
+
+  final int? maxShrinks;
 }

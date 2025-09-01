@@ -8,7 +8,9 @@
 
 Let you code generate your test cases for you!
 
-Wheatley is a property based testing (PBT) library for Dart, spiritual successor to [Glados](https://pub.dev/packages/glados).
+Wheatley is a no frills property based testing (PBT) library for Dart, spiritual successor to 
+[Glados](https://pub.dev/packages/glados).
+
 
 # Background
 Explaining the basics and virtues of property based testing is beyond the scope of this README, but
@@ -20,6 +22,9 @@ you started:
  - F# for Fun and Profit, [The "Property Based Testing" series](https://fsharpforfunandprofit.com/series/property-based-testing/)
  - [Property based testing #1: What is it anyway?](https://getcode.substack.com/p/property-based-testing-1-what-is)
 
+Here's a great video about how to think about getting started with PBT:
+https://youtu.be/wHJZ0icwSkc?si=xGv88gLZBo0Evx7F
+
 # Install
 Just add wheatley to your dev dependencies in `pubspec.yaml`:
 ```yaml
@@ -28,8 +33,8 @@ dev_dependencies:
 ```
 
 # Usage
-
-import `wheatley.dart` and use `forAll` to verify that your properties hold true for all generated inputs, e.g.:
+import `wheatley.dart` and use `forAll` to verify that your properties hold true for all generated 
+inputs, e.g.:
 ```dart
 import 'package:test/test.dart';
 import 'package:wheatley/wheatley.dart';
@@ -41,8 +46,8 @@ void main() {
 }
 ```
 
-You can configure `forAll` with an `Explore` config to control how many iterations to run, how fast to to scale the
-size of generated value, and even which `Random` instance to use.
+You can configure `forAll` with an `Explore` config to control how many iterations to run, how fast 
+to to scale the size of generated value, and even which `Random` instance to use.
 
 ### Using more than one generator
 Generating a new value from two or more other generated values can be done in two different ways.
@@ -66,23 +71,31 @@ void main() {
 ```
 
 ## Writing custom generators.
-A generator for a type `T` (`Generator<T>`) is just a function that receives a `Random` instance and a size, and returns
-a `Candidate`. A `Candidate` is essentially just a value, but a value that also knows how to make itself less 
-"complex", if possible. What complex means for a particular value is really up to the author of the generator.
+A generator for a type `T` (`Generator<T>`) is just a function that receives a `Random` instance and
+a size, and returns a `Candidate`. A `Candidate` is essentially just a value, but a value that also 
+knows how to make itself less "complex", if possible. What complex means for a particular value is 
+really up to the author of the generator.
 
-`GeneratorExtensions` defines a number of utilities to make it more convenient to create new custom generators based on 
-the already existing default ones. Arguably the most important one being `zip`, to combine two existing generators into
-one, e.g.:
+`GeneratorExtensions` defines a number of utilities to make it more convenient to create new custom 
+generators based on 
+the already existing default ones. Arguably the most important one being `zip`, to combine two 
+existing generators into one, e.g.:
 ```dart
 Generator<MyClass> myClass = (g1, g2, g3).zip.map((values) => MyClass(values.$1, values.$2, values.$3));
 ```
 
-**Note**: `forAllX` and `zip` are currently only have implementations for up to 8 values. Please open an issue if have
-need of more than that.
+**Note**: `forAllX` and `zip` are currently only have implementations for up to 8 values. Please 
+open an issue if have need of more than that.
+
+## Using generators for non-property based testing
+
+Generators can easily be used to generate test input data for traditional example based tests that. 
+Just pass `ExploreConfig.single()` to `forAll` and Wheatley will only test your code with a single 
+example and not try to shrink the input if the test fails.
 
 # Thanks
 Huge thanks to [Marcel Garus](https://github.com/MarcelGarus) for creating the original Glados 
 library, which Wheatley has drawn a lot of inspiration from.
 
 # Contributing
-Contributions are welcome! Please open a PR or an issue if you have any suggestions or improvements.
+Contributions welcome! Please open a PR or an issue if you have any suggestions or improvements.

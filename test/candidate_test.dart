@@ -48,6 +48,11 @@ void main() {
           expect(disposedValues, [4, 3, 2, 1]);
         },
       );
+      test('Does not shrink more than maxShrink times', () async {
+        final (shrinks, candidate) = await Candidate(4, shrink: shrinkInt).shrinkUntilDone((_) => throw Exception(), 2);
+        expect(shrinks, 2);
+        expect(candidate.value, 2);
+      });
     });
   });
 }
