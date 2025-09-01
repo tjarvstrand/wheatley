@@ -1,6 +1,6 @@
 name: wheatley
 description: 'A property based testing framework.'
-version: 0.1.0+dev1
+version: 0.1.0
 
 repository: https://github.com/tjarvtrand/wheatley
 
