@@ -1,8 +1,7 @@
 name: wheatley
-description: 'A property based testing framework.'
-version: 0.1.0
-
-repository: https://github.com/tjarvtrand/wheatley
+description: 'Generate your test inputs with Weatley, a no frills library for property based testing.'
+version: 0.1.1
+repository: https://github.com/tjarvstrand/wheatley
 
 environment:
   sdk: ">=3.7.0 <4.0.0"

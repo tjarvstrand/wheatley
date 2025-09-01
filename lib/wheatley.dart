@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:wheatley/src/explore_config.dart';
 import 'package:wheatley/src/generator.dart';
@@ -8,13 +7,11 @@ export 'package:wheatley/src/candidate.dart';
 export 'package:wheatley/src/generator.dart';
 export 'package:wheatley/src/generators.dart';
 
-void _defaultErrorLogger(String message) => stderr.writeln(message);
-
 /// Executes the given body with a bunch of parameters, trying to break it.
 Future<void> Function(FutureOr<void> Function(T)) forAll<T>(
   Generator<T> generator, {
   ExploreConfig config = const ExploreConfig(),
-  void Function(String message) log = _defaultErrorLogger,
+  void Function(String message) log = print,
 }) => (body) async {
   final failure = await generator.explore(config, body);
   if (failure == null) {
@@ -37,7 +34,7 @@ Future<void> Function(FutureOr<void> Function(T1, T2)) forAll2<T1, T2>(
   Generator<T1> generator1,
   Generator<T2> generator2, {
   ExploreConfig config = const ExploreConfig(),
-  void Function(String message) log = _defaultErrorLogger,
+  void Function(String message) log = print,
 }) => (body) => forAll(generator1.zip(generator2), config: config, log: log)(body.tupled);
 
 Future<void> Function(FutureOr<void> Function(T1, T2, T3)) forAll3<T1, T2, T3>(
@@ -45,7 +42,7 @@ Future<void> Function(FutureOr<void> Function(T1, T2, T3)) forAll3<T1, T2, T3>(
   Generator<T2> generator2,
   Generator<T3> generator3, {
   ExploreConfig config = const ExploreConfig(),
-  void Function(String message) log = _defaultErrorLogger,
+  void Function(String message) log = print,
 }) => (body) => forAll((generator1, generator2, generator3).zip, config: config, log: log)(body.tupled);
 
 Future<void> Function(FutureOr<void> Function(T1, T2, T3, T4)) forAll4<T1, T2, T3, T4>(
@@ -54,7 +51,7 @@ Future<void> Function(FutureOr<void> Function(T1, T2, T3, T4)) forAll4<T1, T2, T
   Generator<T3> generator3,
   Generator<T4> generator4, {
   ExploreConfig config = const ExploreConfig(),
-  void Function(String message) log = _defaultErrorLogger,
+  void Function(String message) log = print,
 }) => (body) => forAll((generator1, generator2, generator3, generator4).zip, config: config, log: log)(body.tupled);
 
 Future<void> Function(FutureOr<void> Function(T1, T2, T3, T4, T5)) forAll5<T1, T2, T3, T4, T5>(
@@ -64,7 +61,7 @@ Future<void> Function(FutureOr<void> Function(T1, T2, T3, T4, T5)) forAll5<T1, T
   Generator<T4> generator4,
   Generator<T5> generator5, {
   ExploreConfig config = const ExploreConfig(),
-  void Function(String message) log = _defaultErrorLogger,
+  void Function(String message) log = print,
 }) =>
     (body) =>
         forAll((generator1, generator2, generator3, generator4, generator5).zip, config: config, log: log)(body.tupled);
@@ -77,7 +74,7 @@ Future<void> Function(FutureOr<void> Function(T1, T2, T3, T4, T5, T6)) forAll6<T
   Generator<T5> generator5,
   Generator<T6> generator6, {
   ExploreConfig config = const ExploreConfig(),
-  void Function(String message) log = _defaultErrorLogger,
+  void Function(String message) log = print,
 }) =>
     (body) => forAll(
       (generator1, generator2, generator3, generator4, generator5, generator6).zip,
@@ -94,7 +91,7 @@ Future<void> Function(FutureOr<void> Function(T1, T2, T3, T4, T5, T6, T7)) forAl
   Generator<T6> generator6,
   Generator<T7> generator7, {
   ExploreConfig config = const ExploreConfig(),
-  void Function(String message) log = _defaultErrorLogger,
+  void Function(String message) log = print,
 }) =>
     (body) => forAll(
       (generator1, generator2, generator3, generator4, generator5, generator6, generator7).zip,
@@ -112,7 +109,7 @@ Future<void> Function(FutureOr<void> Function(T1, T2, T3, T4, T5, T6, T7, T8)) f
   Generator<T7> generator7,
   Generator<T8> generator8, {
   ExploreConfig config = const ExploreConfig(),
-  void Function(String message) log = _defaultErrorLogger,
+  void Function(String message) log = print,
 }) =>
     (body) => forAll(
       (generator1, generator2, generator3, generator4, generator5, generator6, generator7, generator8).zip,

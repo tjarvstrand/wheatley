@@ -298,7 +298,7 @@ Generator<DateTime> dateTime({DateTime? min = const NoDateTimeProvided(), DateTi
 Generator<Duration> duration({Duration? min = const NoDurationProvided(), Duration? max}) => integer(
   min: min is NoDurationProvided ? 0 : min?.inMicroseconds,
   max: max?.inMicroseconds,
-).map((int) => Duration(microseconds: int));
+).map((ms) => Duration(microseconds: ms));
 
 const asciiLetters = 'abcdefghijklmnopqrstuvwxyz';
 const digits = '0123456789';
