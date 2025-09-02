@@ -7,15 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+ - Updated and expanded README.
+
 ## 0.1.1
 
 ### Fixed
 
  - Fixes for pub.dev score:
    - Remove io import to support web/wasm.
-   - Rename variable name
+   - Rename variable name.
    - Fixes to pubspec.yaml
 
 ## 0.1.0
 
-Initial version
+Initial version.

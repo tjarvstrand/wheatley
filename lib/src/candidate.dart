@@ -5,6 +5,10 @@ import 'package:meta/meta.dart';
 /// Represents a value that is a candidate that could possibly falsify a property. [Candidate]s can be shrunk to make
 /// them "simpler", in order to find the simplest possible input that still falsifies the property.
 class Candidate<T> {
+  /// Creates a new candidate value.
+  ///
+  /// [shrink] and [dispose] take the candidates current value as input. This is so that they can be passed on when
+  /// creating new candidates from this one.
   Candidate(this.value, {Iterable<Candidate<T>> Function(T)? shrink, void Function(T)? dispose})
     : _shrink = shrink ?? ((_) => const []),
       dispose = dispose ?? ((_) {});
