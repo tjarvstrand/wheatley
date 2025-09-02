@@ -24,7 +24,7 @@ Future<void> Function(FutureOr<void> Function(T)) forAll<T>(
   log('Failing for input: ${input.value}\n');
   log('Smallest failing input: ${shrunkInput.value}\n');
   log('');
-  shrunkInput.dispose(shrunkInput.value);
+  shrunkInput.dispose();
   Error.throwWithStackTrace(error, stackTrace);
 };
 

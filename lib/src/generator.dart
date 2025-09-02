@@ -38,8 +38,8 @@ extension GeneratorExtensions<T> on Generator<T> {
       mapped.value,
       shrink: (_) => mapped.shrunk,
       dispose: (v) {
-        candidate.dispose(candidate.value);
-        mapped.dispose(v);
+        candidate.dispose();
+        mapped.dispose();
       },
     );
   };
@@ -88,7 +88,7 @@ extension GeneratorExtensions<T> on Generator<T> {
       } catch (error, stackTrace) {
         return (index + 1, candidate, error, stackTrace);
       } finally {
-        candidate.dispose(candidate.value);
+        candidate.dispose();
       }
     }
     return null;

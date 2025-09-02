@@ -11,18 +11,19 @@ class Candidate<T> {
   /// creating new candidates from this one.
   Candidate(this.value, {Iterable<Candidate<T>> Function(T)? shrink, void Function(T)? dispose})
     : _shrink = shrink ?? ((_) => const []),
-      dispose = dispose ?? ((_) {});
+      _dispose = dispose ?? ((_) {});
 
   /// The value of this [Candidate].
   final T value;
 
   /// Called to clean up resources when this [Candidate] is no longer needed.
-  @internal
-  final void Function(T) dispose;
 
-  Candidate<T> withValue(T newValue) => Candidate(newValue, shrink: _shrink, dispose: dispose);
+  final void Function(T) _dispose;
+  void dispose() => _dispose(value);
 
-  Candidate<T> get unshrinkable => Candidate(value, dispose: dispose);
+  Candidate<T> withValue(T newValue) => Candidate(newValue, shrink: _shrink, dispose: _dispose);
+
+  Candidate<T> get unshrinkable => Candidate(value, dispose: _dispose);
 
   /// Generates an [Iterable] of [Candidate]s that fulfill the following criteria:
   ///
@@ -56,7 +57,7 @@ class Candidate<T> {
       if (falsifyingCandidate == null) {
         break;
       }
-      currentInput.dispose(currentInput.value);
+      currentInput.dispose();
       currentInput = falsifyingCandidate;
     }
     return (shrinks, currentInput);
@@ -70,14 +71,14 @@ class Candidate<T> {
     Candidate<T>? result = null;
     for (final candidate in candidates) {
       if (falsified) {
-        candidate.dispose(candidate.value);
+        candidate.dispose();
       } else {
         try {
           await test(candidate.value);
-          candidate.dispose(candidate.value);
+          candidate.dispose();
         } catch (_) {
           if (result != null) {
-            result.dispose(result.value);
+            result.dispose();
           }
           falsified = true;
           result = candidate;
@@ -95,13 +96,13 @@ class Candidate<T> {
           (candidate) => candidate.map(
             mapper,
             dispose: (v) {
-              candidate.dispose(value);
+              candidate.dispose();
               dispose?.call(v);
             },
           ),
         ),
     dispose: (v) {
-      this.dispose(value);
+      this.dispose();
       dispose?.call(v);
     },
   );
@@ -116,7 +117,7 @@ class Candidate<T> {
     shrink: (_) => shrunk.cast<Candidate<T?>>().followedBy([Candidate<T?>(null, shrink: (_) => [])]),
     dispose: (v) {
       if (v != null) {
-        dispose(v);
+        _dispose(v);
       }
     },
   );
@@ -135,9 +136,9 @@ class Candidate<T> {
       final otherShrink = other.shrunk;
       return otherShrink.map((shrunk) => shrunk.map((otherValue) => (value, otherValue)));
     },
-    dispose: (vs) {
-      dispose(vs.$1);
-      other.dispose(vs.$2);
+    dispose: (_) {
+      dispose();
+      other.dispose();
     },
   );
 

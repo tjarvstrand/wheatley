@@ -220,7 +220,7 @@ Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize})
         }
       },
       // Since candidates are not recreated or copied when shrinking, we only need to dispose them once each.
-      dispose: (values) => candidates.forEach((c) => c.dispose(c.value)),
+      dispose: (values) => candidates.forEach((c) => c.dispose()),
     );
   };
 }
@@ -266,7 +266,7 @@ Generator<Set<T>> setOf<T>(Set<T> items, {int minSize = 0, int? maxSize}) {
         }
       },
       // Since candidates are not recreated or copied when shrinking, we only need to dispose them once each.
-      dispose: (values) => candidates.forEach((c) => c.dispose(c.value)),
+      dispose: (values) => candidates.forEach((c) => c.dispose()),
     );
   };
 }
