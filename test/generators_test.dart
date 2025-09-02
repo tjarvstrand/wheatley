@@ -151,7 +151,7 @@ void main() {
         ]);
       });
       test(
-        'listOf oes not generate a list smaller than minSize',
+        'listOf does not generate a list smaller than minSize',
         () => forAll(listOf(integer(), minSize: 10))((list) => expect(list.length, greaterThanOrEqualTo(10))),
       );
       test(

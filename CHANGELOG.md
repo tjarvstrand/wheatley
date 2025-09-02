@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
  - Updated and expanded README.
+ - Simplify candidate shrink api to allow user to return simple values instead of full candidates.
 
 ## 0.1.1
 

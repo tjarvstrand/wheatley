@@ -123,9 +123,7 @@ Candidate<MyClass> myClassGenerator(Random random, int Size) {
 }
 ```
 
-Since `shrink` returns a list of candidates, that may in turn need to know how to shrink themselves,
-the definition can get recursive and a bit finicky. To simplify your code, you can instead use the
-`generator` function which takes care of this recursion for you:
+Or, more conveniently, use the provided`generator` function:
 
 ```dart
 Generator<MyClass> myClassGenerator = generator(

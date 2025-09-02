@@ -16,11 +16,7 @@ Generator<T> generator<T>({
   required T Function(math.Random random, int size) generate,
   Iterable<T> Function(T input)? shrink,
   void Function(T value)? dispose,
-}) {
-  Candidate<T> generateCandidate(T value) =>
-      Candidate(value, shrink: (v) => shrink?.call(v).map(generateCandidate) ?? [], dispose: dispose);
-  return (random, size) => generateCandidate(generate(random, size));
-}
+}) => (random, size) => Candidate(generate(random, size), shrink: shrink, dispose: dispose);
 
 /// Useful methods on [Generator]s.
 extension GeneratorExtensions<T> on Generator<T> {
@@ -34,7 +30,7 @@ extension GeneratorExtensions<T> on Generator<T> {
   Generator<T2> flatMap<T2>(Generator<T2> Function(T) mapper) => (random, size) {
     final candidate = this(random, size);
     final mapped = mapper(candidate.value)(random, size);
-    return Candidate(
+    return Candidate.internal(
       mapped.value,
       shrink: (_) => mapped.shrunk,
       dispose: (v) {

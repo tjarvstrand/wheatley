@@ -9,8 +9,13 @@ class Candidate<T> {
   ///
   /// [shrink] and [dispose] take the candidates current value as input. This is so that they can be passed on when
   /// creating new candidates from this one.
-  Candidate(this.value, {Iterable<Candidate<T>> Function(T)? shrink, void Function(T)? dispose})
-    : _shrink = shrink ?? ((_) => const []),
+  Candidate(this.value, {Iterable<T> Function(T)? shrink, void Function(T)? dispose})
+    : _shrink = ((v) => shrink == null ? [] : shrink(v).map((cv) => Candidate(cv, shrink: shrink, dispose: dispose))),
+      _dispose = dispose ?? ((_) {});
+
+  @internal
+  Candidate.internal(this.value, {Iterable<Candidate<T>> Function(T)? shrink, void Function(T)? dispose})
+    : _shrink = shrink ?? ((_) => []),
       _dispose = dispose ?? ((_) {});
 
   /// The value of this [Candidate].
@@ -21,7 +26,7 @@ class Candidate<T> {
   final void Function(T) _dispose;
   void dispose() => _dispose(value);
 
-  Candidate<T> withValue(T newValue) => Candidate(newValue, shrink: _shrink, dispose: _dispose);
+  Candidate<T> withValue(T newValue) => Candidate.internal(newValue, shrink: _shrink, dispose: _dispose);
 
   Candidate<T> get unshrinkable => Candidate(value, dispose: _dispose);
 
@@ -89,18 +94,9 @@ class Candidate<T> {
   }
 
   /// Returns a new [Candidate] where [mapper] is applied to the value of this [Candidate].
-  Candidate<T2> map<T2>(T2 Function(T value) mapper, {void Function(T2)? dispose}) => Candidate(
+  Candidate<T2> map<T2>(T2 Function(T value) mapper, {void Function(T2)? dispose}) => Candidate.internal(
     mapper(value),
-    shrink:
-        (_) => shrunk.map(
-          (candidate) => candidate.map(
-            mapper,
-            dispose: (v) {
-              candidate.dispose();
-              dispose?.call(v);
-            },
-          ),
-        ),
+    shrink: (v) => shrunk.map((c) => c.map(mapper, dispose: dispose)),
     dispose: (v) {
       this.dispose();
       dispose?.call(v);
@@ -108,11 +104,20 @@ class Candidate<T> {
   );
 
   /// Returns a new [Candidate] where [mapper] is applied to the value of this [Candidate].
-  Candidate<T2> flatMap<T2>(Candidate<T2> Function(T value) mapper, {void Function(T2)? dispose}) =>
-      Candidate(mapper(value).value, shrink: (v) => shrunk.map((s) => mapper(s.value)), dispose: dispose);
+  Candidate<T2> flatMap<T2>(Candidate<T2> Function(T value) mapper) {
+    final newCandidate = mapper(value);
+    return Candidate.internal(
+      newCandidate.value,
+      shrink: newCandidate._shrink,
+      dispose: (v) {
+        this.dispose();
+        newCandidate.dispose();
+      },
+    );
+  }
 
   /// Returns a new [Candidate] that can be shrunk to `null` in addition to this [Candidate]s shrink candidates.
-  Candidate<T?> get nullable => Candidate<T?>(
+  Candidate<T?> get nullable => Candidate<T?>.internal(
     value,
     shrink: (_) => shrunk.cast<Candidate<T?>>().followedBy([Candidate<T?>(null, shrink: (_) => [])]),
     dispose: (v) {
@@ -126,7 +131,7 @@ class Candidate<T> {
   ///
   /// The shrink candidates of the resulting [Candidate] is the Cartesian product of the shrink candidates of this
   /// and [other].
-  Candidate<(T, T2)> zip<T2>(Candidate<T2> other) => Candidate<(T, T2)>(
+  Candidate<(T, T2)> zip<T2>(Candidate<T2> other) => Candidate<(T, T2)>.internal(
     (value, other.value),
     shrink: (_) {
       final thisShrink = shrunk;

@@ -203,7 +203,7 @@ Generator<List<T>> listOf<T>(Generator<T> item, {int minSize = 0, int? maxSize})
     final candidates = List.generate(length, (_) => item(random, size));
     final values = candidates.map((i) => i.value).toList();
 
-    return Candidate(
+    return Candidate.internal(
       values,
       shrink: (v) sync* {
         if (candidates.isEmpty) {
@@ -249,7 +249,7 @@ Generator<Set<T>> setOf<T>(Set<T> items, {int minSize = 0, int? maxSize}) {
     final candidates = indices.take(length).map((i) => Candidate(items.elementAt(i), shrink: (_) => [])).toList();
     final values = candidates.map((i) => i.value).toList();
 
-    return Candidate(
+    return Candidate.internal(
       values.toSet(),
       shrink: (v) sync* {
         if (candidates.isEmpty) {
